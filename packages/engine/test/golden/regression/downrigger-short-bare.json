@@ -1,0 +1,11 @@
+{
+  "description": "Short cable, bare terminal — regression lock. Regenerated when physics changes intentionally.",
+  "segments": 200,
+  "cableOutM": 15,
+  "terminalDragN": 0,
+  "expected": {
+    "ballDepth": 14.45902856347489,
+    "setback": 3.681980910609157,
+    "blowbackAngle": 0.42029276233850993
+  }
+}

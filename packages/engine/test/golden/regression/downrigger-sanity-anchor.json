@@ -1,0 +1,12 @@
+{
+  "description": "Sanity anchor: 10 lb sphere, 100 ft × 0.045 in stainless, 2.5 kt, 10 N terminal. Regenerated when physics changes intentionally.",
+  "segments": 200,
+  "expected": {
+    "ballDepth": 25.256595885059586,
+    "setback": 16.510208989589696,
+    "blowbackAngle": 0.7938854821981327,
+    "ballSubmergedWeight": 40.461557285195816,
+    "ballDrag": 2.615017695280573,
+    "totalCableNormalDrag": 22.49041189897193
+  }
+}

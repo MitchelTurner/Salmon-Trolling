@@ -24,3 +24,18 @@ export {
   type MPerS2,
   type ProvenanceTag,
 } from './constants.js';
+
+export {
+  downriggerInputs,
+  frontalArea,
+  kgPerM,
+  solveDownrigger,
+  squareMeters,
+  type BallShape,
+  type DownriggerBall,
+  type DownriggerCable,
+  type KgPerM,
+  type SolveDownriggerInput,
+  type SolveDownriggerResult,
+  type SquareMeters,
+} from './models/downrigger.js';
