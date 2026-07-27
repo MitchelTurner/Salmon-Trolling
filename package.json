@@ -21,7 +21,8 @@
       "prisma",
       "@prisma/client",
       "@prisma/engines",
-      "esbuild"
+      "esbuild",
+      "@nestjs/core"
     ]
   }
 }
