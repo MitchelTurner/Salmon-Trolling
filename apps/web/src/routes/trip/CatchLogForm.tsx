@@ -17,6 +17,10 @@ import {
   parseMassInput,
 } from '../../format/index.js';
 import { ensurePersonalOrg } from '../../trips/session.js';
+import {
+  VoiceCatchControls,
+  type CatchDraft,
+} from '../../voice/index.js';
 
 const SPECIES = ['coho', 'chinook', 'pink', 'chum', 'sockeye', 'other'] as const;
 
@@ -57,6 +61,7 @@ export function CatchLogForm({ tripId, onLogged }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [correcting, setCorrecting] = useState<CatchRecord | null>(null);
   const [catches, setCatches] = useState<CatchRecord[]>([]);
+  const [draft, setDraft] = useState<CatchDraft | null>(null);
 
   const refresh = async () => {
     setCatches(await listActiveCatches(tripId));
@@ -65,6 +70,15 @@ export function CatchLogForm({ tripId, onLogged }: Props) {
   useEffect(() => {
     void listActiveCatches(tripId).then(setCatches);
   }, [tripId]);
+
+  const applyDraft = (next: CatchDraft) => {
+    setDraft(next);
+    if (next.species) setSpecies(next.species);
+    if (next.massLb != null) setMassLb(String(next.massLb));
+    if (next.lengthFt != null) setLengthFt(String(next.lengthFt));
+    if (next.kept !== undefined) setKept(next.kept);
+    setError(null);
+  };
 
   const submit = () => {
     if (!position) {
@@ -80,6 +94,10 @@ export function CatchLogForm({ tripId, onLogged }: Props) {
         rigInputs: activeRig,
         position,
       });
+      if (draft?.notes) {
+        rigSnapshot.voiceNotes = draft.notes;
+        rigSnapshot.voiceTranscript = draft.transcript;
+      }
       const photos = photo ? [photo] : [];
 
       const payload = {
@@ -112,6 +130,7 @@ export function CatchLogForm({ tripId, onLogged }: Props) {
       setMassLb('');
       setCorrecting(null);
       setKept(false);
+      setDraft(null);
       await refresh();
       onLogged?.(row);
     })()
@@ -126,6 +145,29 @@ export function CatchLogForm({ tripId, onLogged }: Props) {
       <h2 className="font-ui text-xs uppercase tracking-wide text-hairline/70">
         {correcting ? 'Correct catch' : 'Log catch'}
       </h2>
+
+      <VoiceCatchControls onDraft={applyDraft} />
+
+      {draft && (
+        <div
+          className="border border-flat bg-shoal/40 p-3"
+          data-testid="voice-draft"
+          role="status"
+        >
+          <p className="font-ui text-xs uppercase tracking-wide text-hairline/70">
+            Voice draft — confirm below
+          </p>
+          <p className="mt-1 font-ui text-sm">“{draft.transcript}”</p>
+          {draft.notes && (
+            <p className="mt-1 font-ui text-xs text-hairline/70">
+              Note: {draft.notes}
+            </p>
+          )}
+          <p className="mt-1 font-ui text-xs text-hairline/60">
+            Nothing is saved until you tap Log catch.
+          </p>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Field label="Species">
