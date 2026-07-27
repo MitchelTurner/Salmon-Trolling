@@ -32,6 +32,6 @@ import { StripeWebhookController } from './webhook.controller.js';
       useFactory: () => new MemoryWebhookEventStore(),
     },
   ],
-  exports: [BillingService],
+  exports: [BillingService, STRIPE_GATEWAY],
 })
 export class BillingModule {}
