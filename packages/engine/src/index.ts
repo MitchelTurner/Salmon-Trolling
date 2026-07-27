@@ -127,3 +127,18 @@ export {
   type SpreadRigInput,
   type TangleWarning,
 } from './spread.js';
+
+export {
+  CIVIL_TWILIGHT_ALT_DEG,
+  SUNRISE_ALT_DEG,
+  solarPosition,
+  solarDay,
+  lightLevelFromAltitude,
+  moonPhase,
+  lightContext,
+  type SolarPosition,
+  type SolarDay,
+  type MoonPhase,
+  type MoonPhaseName,
+  type LightContext,
+} from './astro/index.js';
