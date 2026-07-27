@@ -103,3 +103,15 @@ export {
   type StwSource,
   type Velocity2,
 } from './stw.js';
+
+export {
+  STW_SIGMA_KT,
+  WIDE_SIGMA_FRACTION,
+  composeSigma,
+  parseRelativeUncertainty,
+  stwSigmaMs,
+  type ComposeSigmaInput,
+  type ComposeSigmaResult,
+  type EstimatedConstantPerturbation,
+  type UncertaintyComponent,
+} from './uncertainty.js';
