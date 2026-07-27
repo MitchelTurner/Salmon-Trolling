@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { StorageQuotaBanner } from './db/index.js';
 import { CalculatorPage } from './routes/calculator/index.js';
+import { TripPage } from './routes/trip/index.js';
 
 export function App() {
   return (
@@ -8,6 +9,7 @@ export function App() {
       <StorageQuotaBanner />
       <Routes>
         <Route path="/calculator" element={<CalculatorPage />} />
+        <Route path="/trip" element={<TripPage />} />
         <Route path="*" element={<Navigate to="/calculator" replace />} />
       </Routes>
     </>

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { AssumptionsPanel } from './AssumptionsPanel.js';
 import { DepthColumn } from './DepthColumn.js';
 import { RigBuilder } from './RigBuilder.js';
@@ -20,9 +21,12 @@ export function CalculatorPage() {
             Offline · no account · engine runs on this device
           </p>
         </div>
-        <p className="hidden font-ui text-xs text-hairline/60 sm:block">
-          Installable PWA
-        </p>
+        <Link
+          to="/trip"
+          className="flex min-h-hit min-w-hit items-center justify-center font-ui text-xs underline"
+        >
+          Trip
+        </Link>
       </header>
 
       <div className="flex min-h-0 flex-1">
