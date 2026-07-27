@@ -1,12 +1,15 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useLiveBoatStore } from '../../boat/live-boat-store.js';
+import { listActiveCatches } from '../../catches/index.js';
+import type { CatchRecord } from '../../db/types.js';
 import { formatSpeed } from '../../format/index.js';
 import {
   closeTripRecording,
   startTripRecording,
 } from '../../trips/session.js';
 import { CatchLogForm } from './CatchLogForm.js';
+import { HarvestPanel } from './HarvestPanel.js';
 
 export function TripPage() {
   const trip = useLiveBoatStore((s) => s.trip);
@@ -16,6 +19,20 @@ export function TripPage() {
   const setRecorderStatus = useLiveBoatStore((s) => s.setRecorderStatus);
   const [busy, setBusy] = useState(false);
   const [closeSummary, setCloseSummary] = useState<string | null>(null);
+  const [keptCatches, setKeptCatches] = useState<CatchRecord[]>([]);
+
+  const refreshKept = async () => {
+    if (!trip?.id) {
+      setKeptCatches([]);
+      return;
+    }
+    const active = await listActiveCatches(trip.id);
+    setKeptCatches(active.filter((c) => c.kept));
+  };
+
+  useEffect(() => {
+    void refreshKept();
+  }, [trip?.id]);
 
   const recording = status === 'recording' || status === 'closing';
   const openTrip = trip && !trip.closedAt;
@@ -122,7 +139,17 @@ export function TripPage() {
           <p className="font-ui text-sm text-hairline/80">{closeSummary}</p>
         )}
 
-        {openTrip && <CatchLogForm tripId={trip.id} />}
+        {openTrip && (
+          <>
+            <CatchLogForm
+              tripId={trip.id}
+              onLogged={() => {
+                void refreshKept();
+              }}
+            />
+            <HarvestPanel keptCatches={keptCatches} />
+          </>
+        )}
 
         <div className="mt-auto flex flex-col gap-2">
           {!openTrip ? (
