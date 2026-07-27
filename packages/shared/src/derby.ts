@@ -69,6 +69,55 @@ export const PublicLeaderboardSchema = z.object({
 
 export type PublicLeaderboard = z.infer<typeof PublicLeaderboardSchema>;
 
+/** Human-readable ticket: DERBY-XXXXXXXX */
+export const DerbyTicketCodeSchema = z
+  .string()
+  .regex(/^DERBY-[A-Z0-9]{8}$/, 'expected DERBY-XXXXXXXX');
+
+export function mintDerbyTicketCode(entropy: string): string {
+  const cleaned = entropy.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+  const pad = cleaned.padEnd(8, 'X').slice(0, 8);
+  return `DERBY-${pad}`;
+}
+
+export const RegisterDerbyBodySchema = z.object({
+  displayName: z.string().trim().min(1).max(120),
+  email: z.string().email(),
+  successUrl: z.string().url(),
+  cancelUrl: z.string().url(),
+  /** Waiver captured before redirect to Stripe. */
+  waiver: z.object({
+    signerName: z.string().trim().min(1).max(120),
+    signatureData: z.string().min(1).max(200_000),
+  }),
+});
+
+export type RegisterDerbyBody = z.infer<typeof RegisterDerbyBodySchema>;
+
+export const CompleteDerbyRegistrationBodySchema = z.object({
+  sessionId: z.string().min(1),
+});
+
+export type CompleteDerbyRegistrationBody = z.infer<
+  typeof CompleteDerbyRegistrationBodySchema
+>;
+
+/** Public registration receipt — no Stripe customer ids. */
+export const DerbyRegistrationReceiptSchema = z.object({
+  entryId: z.string().min(1),
+  slug: DerbySlugSchema,
+  displayName: z.string().min(1),
+  paid: z.boolean(),
+  waiverAt: z.string().datetime().optional(),
+  ticketCode: DerbyTicketCodeSchema.optional(),
+  checkoutUrl: z.string().url().optional(),
+  checkoutSessionId: z.string().optional(),
+});
+
+export type DerbyRegistrationReceipt = z.infer<
+  typeof DerbyRegistrationReceiptSchema
+>;
+
 /**
  * Rank non-voided weigh-ins by mass descending.
  * Ties share the same rank; next rank skips (1, 2, 2, 4).

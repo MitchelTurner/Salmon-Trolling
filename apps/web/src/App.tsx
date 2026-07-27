@@ -1,7 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { StorageQuotaBanner } from './db/index.js';
 import { CalculatorPage } from './routes/calculator/index.js';
-import { LeaderboardPage } from './routes/derbies/index.js';
+import { LeaderboardPage, RegisterPage } from './routes/derbies/index.js';
 import { DockPage } from './routes/dock/index.js';
 import { RecommendPage } from './routes/recommend/index.js';
 import { GuestReportPage } from './routes/report/index.js';
@@ -20,6 +20,7 @@ export function App() {
         <Route path="/r/:slug" element={<GuestReportPage />} />
         <Route path="/tag/:code" element={<TagStatusPage />} />
         <Route path="/derbies/:slug" element={<LeaderboardPage />} />
+        <Route path="/derbies/:slug/register" element={<RegisterPage />} />
         <Route path="*" element={<Navigate to="/calculator" replace />} />
       </Routes>
     </>

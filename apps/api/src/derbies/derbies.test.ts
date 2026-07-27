@@ -1,12 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import { PublicLeaderboardSchema } from '@troll/shared';
+import {
+  DerbyTicketCodeSchema,
+  PublicLeaderboardSchema,
+} from '@troll/shared';
+import { FakeStripeGateway } from '../billing/fake-stripe.js';
 import { DerbiesService } from './derbies.service.js';
 import { MemoryDerbyStore } from './memory-store.js';
 
-describe('DerbiesService leaderboard', () => {
+describe('DerbiesService', () => {
   function setup() {
     const store = new MemoryDerbyStore();
-    const service = new DerbiesService(store);
+    const stripe = new FakeStripeGateway();
+    const service = new DerbiesService(store, stripe);
     store.seed({
       id: 'derby_1',
       orgId: 'org_1',
@@ -20,7 +25,7 @@ describe('DerbiesService leaderboard', () => {
         allowAppCatchEntries: false,
       },
     });
-    return { store, service };
+    return { store, stripe, service };
   }
 
   it('returns null for unknown slug', async () => {
@@ -102,5 +107,43 @@ describe('DerbiesService leaderboard', () => {
     expect(parsed.weighInCount).toBe(2);
     expect(parsed.rules.allowAppCatchEntries).toBe(false);
     expect(JSON.stringify(parsed)).not.toContain('@example.com');
+  });
+
+  it('registers with waiver, Stripe checkout, then issues a ticket', async () => {
+    const { service, stripe } = setup();
+    const pending = await service.register('ketchikan-king-2026', {
+      displayName: 'Alex River',
+      email: 'alex@example.com',
+      successUrl: 'https://troll.app/derbies/ketchikan-king-2026?paid=1',
+      cancelUrl: 'https://troll.app/derbies/ketchikan-king-2026/register',
+      waiver: {
+        signerName: 'Alex River',
+        signatureData: 'data:image/png;base64,aaa',
+      },
+    });
+
+    expect(pending.paid).toBe(false);
+    expect(pending.ticketCode).toBeUndefined();
+    expect(pending.waiverAt).toBeTruthy();
+    expect(pending.checkoutUrl).toContain('checkout.stripe.test');
+    expect(stripe.sessions[0]?.mode).toBe('payment');
+    expect(
+      (stripe.sessions[0]?.metadata as { kind?: string }).kind,
+    ).toBe('derby_ticket');
+
+    const paid = await service.completeRegistration('ketchikan-king-2026', {
+      sessionId: pending.checkoutSessionId!,
+    });
+    expect(paid.paid).toBe(true);
+    expect(DerbyTicketCodeSchema.safeParse(paid.ticketCode).success).toBe(true);
+    expect(paid.checkoutUrl).toBeUndefined();
+
+    const again = await service.completeRegistration('ketchikan-king-2026', {
+      sessionId: pending.checkoutSessionId!,
+    });
+    expect(again.ticketCode).toBe(paid.ticketCode);
+
+    const board = await service.leaderboard('ketchikan-king-2026');
+    expect(board?.registeredCount).toBe(1);
   });
 });

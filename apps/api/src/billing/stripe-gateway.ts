@@ -30,7 +30,13 @@ export class LiveStripeGateway implements StripeGateway {
     successUrl: string;
     cancelUrl: string;
     seasonPass: boolean;
+    metadata?: Record<string, string>;
   }): Promise<CheckoutResult> {
+    const metadata = {
+      orgId: input.orgId,
+      seasonPass: input.seasonPass ? 'true' : 'false',
+      ...input.metadata,
+    };
     const session = await this.stripe.checkout.sessions.create({
       mode: input.mode,
       // Do not pass payment_method_types — enable dynamic payment methods.
@@ -40,10 +46,7 @@ export class LiveStripeGateway implements StripeGateway {
       customer: input.customerId,
       customer_email: input.customerId ? undefined : input.customerEmail,
       client_reference_id: input.orgId,
-      metadata: {
-        orgId: input.orgId,
-        seasonPass: input.seasonPass ? 'true' : 'false',
-      },
+      metadata,
       subscription_data:
         input.mode === 'subscription'
           ? {
@@ -53,7 +56,9 @@ export class LiveStripeGateway implements StripeGateway {
               },
             }
           : undefined,
-      integration_identifier: `season-pass-${randomSuffix()}`,
+      integration_identifier: input.seasonPass
+        ? `season-pass-${randomSuffix()}`
+        : `checkout-${randomSuffix()}`,
     });
 
     if (!session.url) {

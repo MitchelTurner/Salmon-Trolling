@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   DerbyRulesSchema,
   DerbySlugSchema,
+  DerbyTicketCodeSchema,
+  RegisterDerbyBodySchema,
+  mintDerbyTicketCode,
   PublicLeaderboardSchema,
   rankLeaderboard,
 } from './derby.js';
@@ -23,6 +26,27 @@ describe('DerbyRulesSchema', () => {
       eligibleSpecies: ['king', 'coho'],
     });
     expect(rules.allowAppCatchEntries).toBe(false);
+  });
+});
+
+describe('mintDerbyTicketCode', () => {
+  it('mints DERBY-XXXXXXXX', () => {
+    const code = mintDerbyTicketCode('abc12345');
+    expect(DerbyTicketCodeSchema.safeParse(code).success).toBe(true);
+    expect(code).toBe('DERBY-ABC12345');
+  });
+});
+
+describe('RegisterDerbyBodySchema', () => {
+  it('requires waiver with Stripe return urls', () => {
+    const parsed = RegisterDerbyBodySchema.safeParse({
+      displayName: 'Alex',
+      email: 'alex@example.com',
+      successUrl: 'https://troll.app/ok',
+      cancelUrl: 'https://troll.app/cancel',
+      waiver: { signerName: 'Alex', signatureData: 'sig' },
+    });
+    expect(parsed.success).toBe(true);
   });
 });
 

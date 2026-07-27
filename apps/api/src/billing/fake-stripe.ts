@@ -23,6 +23,7 @@ export class FakeStripeGateway implements StripeGateway {
     successUrl: string;
     cancelUrl: string;
     seasonPass: boolean;
+    metadata?: Record<string, string>;
   }): Promise<CheckoutResult> {
     const sessionId = `cs_test_${++this.seq}`;
     const customerId = input.customerId ?? `cus_test_${this.seq}`;
@@ -33,6 +34,7 @@ export class FakeStripeGateway implements StripeGateway {
       metadata: {
         orgId: input.orgId,
         seasonPass: input.seasonPass ? 'true' : 'false',
+        ...input.metadata,
       },
       subscription:
         input.mode === 'subscription' ? `sub_test_${this.seq}` : undefined,

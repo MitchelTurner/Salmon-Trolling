@@ -123,14 +123,22 @@ export {
 } from './bookings.js';
 
 export {
+  CompleteDerbyRegistrationBodySchema,
+  DerbyRegistrationReceiptSchema,
   DerbyRulesSchema,
   DerbySchema,
   DerbySlugSchema,
+  DerbyTicketCodeSchema,
   LeaderboardEntrySchema,
   PublicLeaderboardSchema,
+  RegisterDerbyBodySchema,
+  mintDerbyTicketCode,
   rankLeaderboard,
+  type CompleteDerbyRegistrationBody,
   type Derby,
+  type DerbyRegistrationReceipt,
   type DerbyRules,
   type LeaderboardEntry,
   type PublicLeaderboard,
+  type RegisterDerbyBody,
 } from './derby.js';

@@ -10,8 +10,13 @@ export type StoredDerbyEntry = {
   readonly displayName: string;
   readonly email: string;
   readonly stripeSessionId?: string;
+  readonly checkoutUrl?: string;
   readonly paidAt?: string;
   readonly waiverAt?: string;
+  readonly waiverSignerName?: string;
+  readonly waiverSignatureData?: string;
+  /** Issued only after payment. */
+  readonly ticketCode?: string;
 };
 
 export type StoredWeighIn = {
@@ -42,9 +47,14 @@ export type SeedDerbyInput = {
 export interface DerbyStore {
   putDerby(derby: StoredDerby): Promise<void>;
   getBySlug(slug: string): Promise<StoredDerby | null>;
+  getById(derbyId: string): Promise<StoredDerby | null>;
   putEntry(entry: StoredDerbyEntry): Promise<void>;
   listEntries(derbyId: string): Promise<StoredDerbyEntry[]>;
   getEntry(entryId: string): Promise<StoredDerbyEntry | null>;
+  getEntryByStripeSession(
+    sessionId: string,
+  ): Promise<StoredDerbyEntry | null>;
+  getEntryByTicketCode(ticketCode: string): Promise<StoredDerbyEntry | null>;
   putWeighIn(weighIn: StoredWeighIn): Promise<void>;
   listWeighIns(derbyId: string): Promise<StoredWeighIn[]>;
 }

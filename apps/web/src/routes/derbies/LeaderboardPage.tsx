@@ -127,12 +127,22 @@ export function LeaderboardPage() {
           </>
         )}
 
-        <Link
-          to="/calculator"
-          className="font-ui text-xs underline text-hairline/70"
-        >
-          Depth calculator
-        </Link>
+        <div className="flex flex-col gap-2">
+          {slug && (
+            <Link
+              to={`/derbies/${slug}/register`}
+              className="font-ui text-sm underline text-hairline"
+            >
+              Register for this derby
+            </Link>
+          )}
+          <Link
+            to="/calculator"
+            className="font-ui text-xs underline text-hairline/70"
+          >
+            Depth calculator
+          </Link>
+        </div>
       </main>
     </div>
   );

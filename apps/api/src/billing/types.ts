@@ -39,6 +39,8 @@ export interface StripeGateway {
     successUrl: string;
     cancelUrl: string;
     seasonPass: boolean;
+    /** Extra Checkout Session metadata (merged with orgId / seasonPass). */
+    metadata?: Record<string, string>;
   }): Promise<CheckoutResult>;
 
   createPortalSession(input: {
