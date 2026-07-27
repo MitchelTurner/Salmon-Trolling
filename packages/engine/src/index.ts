@@ -92,3 +92,14 @@ export {
 } from './models/towed-cable.js';
 
 export { V_REF } from './models/v-ref.js';
+
+export {
+  BARE_SOG_WARNING,
+  resolveStw,
+  type PredictedCurrent,
+  type ResolveStwInput,
+  type ResolveStwResult,
+  type StwConfidence,
+  type StwSource,
+  type Velocity2,
+} from './stw.js';
