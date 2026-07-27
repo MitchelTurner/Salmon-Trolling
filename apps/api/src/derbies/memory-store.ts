@@ -13,6 +13,7 @@ export class MemoryDerbyStore implements DerbyStore {
   private readonly bySession = new Map<string, string>();
   private readonly byTicket = new Map<string, string>();
   private readonly weighIns = new Map<string, StoredWeighIn>();
+  private readonly weighInByClient = new Map<string, string>();
 
   seed(input: SeedDerbyInput): StoredDerby {
     const derby: StoredDerby = {
@@ -74,6 +75,14 @@ export class MemoryDerbyStore implements DerbyStore {
 
   async putWeighIn(weighIn: StoredWeighIn): Promise<void> {
     this.weighIns.set(weighIn.id, weighIn);
+    this.weighInByClient.set(weighIn.clientId, weighIn.id);
+  }
+
+  async getWeighInByClientId(
+    clientId: string,
+  ): Promise<StoredWeighIn | null> {
+    const id = this.weighInByClient.get(clientId);
+    return id ? (this.weighIns.get(id) ?? null) : null;
   }
 
   async listWeighIns(derbyId: string): Promise<StoredWeighIn[]> {

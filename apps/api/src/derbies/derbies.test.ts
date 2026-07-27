@@ -58,6 +58,7 @@ describe('DerbiesService', () => {
 
     await store.putWeighIn({
       id: 'wi_small',
+      clientId: 'cli_small',
       derbyId: 'derby_1',
       entryId: 'entry_a',
       species: 'king',
@@ -70,6 +71,7 @@ describe('DerbiesService', () => {
     });
     await store.putWeighIn({
       id: 'wi_big',
+      clientId: 'cli_big',
       derbyId: 'derby_1',
       entryId: 'entry_b',
       species: 'king',
@@ -81,6 +83,7 @@ describe('DerbiesService', () => {
     });
     await store.putWeighIn({
       id: 'wi_void',
+      clientId: 'cli_void',
       derbyId: 'derby_1',
       entryId: 'entry_a',
       species: 'king',
@@ -145,5 +148,69 @@ describe('DerbiesService', () => {
 
     const board = await service.leaderboard('ketchikan-king-2026');
     expect(board?.registeredCount).toBe(1);
+  });
+
+  it('records offline weigh-ins against paid tickets idempotently', async () => {
+    const { service } = setup();
+    const pending = await service.register('ketchikan-king-2026', {
+      displayName: 'Alex River',
+      email: 'alex@example.com',
+      successUrl: 'https://troll.app/ok',
+      cancelUrl: 'https://troll.app/cancel',
+      waiver: { signerName: 'Alex River', signatureData: 'sig' },
+    });
+    const paid = await service.completeRegistration('ketchikan-king-2026', {
+      sessionId: pending.checkoutSessionId!,
+    });
+
+    const roster = await service.listTickets('ketchikan-king-2026', 'org_1');
+    expect(roster).toHaveLength(1);
+    expect(roster![0]!.ticketCode).toBe(paid.ticketCode);
+
+    const body = {
+      clientId: '01HXWEIGHIN000000000000001',
+      ticketCode: paid.ticketCode!,
+      species: 'king',
+      massKg: 18.2,
+      station: 'thomas-basin',
+      t: '2026-07-02T19:00:00.000Z',
+      witness: 'Dock judge',
+      photoKeys: ['photo/local-1'],
+    };
+    const first = await service.createWeighIn(
+      'ketchikan-king-2026',
+      'org_1',
+      'op_crew',
+      body,
+    );
+    const second = await service.createWeighIn(
+      'ketchikan-king-2026',
+      'org_1',
+      'op_crew',
+      body,
+    );
+    expect(second.id).toBe(first.id);
+    expect(first.displayName).toBe('Alex River');
+    expect(first.massKg).toBe(18.2);
+
+    await expect(
+      service.createWeighIn('ketchikan-king-2026', 'org_1', 'op_crew', {
+        ...body,
+        clientId: '01HXWEIGHIN000000000000002',
+        species: 'halibut',
+      }),
+    ).rejects.toThrow(/not eligible/);
+
+    await expect(
+      service.createWeighIn('ketchikan-king-2026', 'org_1', 'op_crew', {
+        ...body,
+        clientId: '01HXWEIGHIN000000000000003',
+        massKg: 1,
+      }),
+    ).rejects.toThrow(/minimum/);
+
+    const board = await service.leaderboard('ketchikan-king-2026');
+    expect(board?.weighInCount).toBe(1);
+    expect(board?.entries[0]!.massKg).toBe(18.2);
   });
 });

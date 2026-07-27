@@ -50,6 +50,22 @@ describe('RegisterDerbyBodySchema', () => {
   });
 });
 
+describe('CreateWeighInBodySchema', () => {
+  it('requires a ticket and client id for offline idempotency', async () => {
+    const { CreateWeighInBodySchema } = await import('./derby.js');
+    const parsed = CreateWeighInBodySchema.safeParse({
+      clientId: '01HXCLIENT0000000000000001',
+      ticketCode: 'DERBY-ABC12345',
+      species: 'king',
+      massKg: 12,
+      station: 'thomas-basin',
+      t: '2026-07-02T19:00:00.000Z',
+    });
+    expect(parsed.success).toBe(true);
+    if (parsed.success) expect(parsed.data.photoKeys).toEqual([]);
+  });
+});
+
 describe('rankLeaderboard', () => {
   it('ranks by mass descending and skips voided', () => {
     const ranked = rankLeaderboard([

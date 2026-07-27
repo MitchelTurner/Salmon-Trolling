@@ -19,7 +19,9 @@ export type Permission =
   | 'crew:read'
   | 'trip:write'
   | 'trip:read'
-  | 'catch:write';
+  | 'catch:write'
+  /** Dock weigh-in station for derbies (08-charter-derby.md). */
+  | 'derby:weighin';
 
 const ALL: readonly Permission[] = [
   'billing:manage',
@@ -31,6 +33,7 @@ const ALL: readonly Permission[] = [
   'trip:write',
   'trip:read',
   'catch:write',
+  'derby:weighin',
 ];
 
 const PERMISSIONS_BY_ROLE: Record<Role, readonly Permission[]> = {
@@ -43,8 +46,16 @@ const PERMISSIONS_BY_ROLE: Record<Role, readonly Permission[]> = {
     'trip:write',
     'trip:read',
     'catch:write',
+    'derby:weighin',
   ],
-  CREW: ['boat:read', 'crew:read', 'trip:write', 'trip:read', 'catch:write'],
+  CREW: [
+    'boat:read',
+    'crew:read',
+    'trip:write',
+    'trip:read',
+    'catch:write',
+    'derby:weighin',
+  ],
   VIEWER: ['boat:read', 'crew:read', 'trip:read'],
 };
 

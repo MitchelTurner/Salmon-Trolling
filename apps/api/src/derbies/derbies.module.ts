@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { OrgAuthGuard } from '../auth/org-auth.guard.js';
 import { BillingModule } from '../billing/billing.module.js';
 import { DerbiesController } from './derbies.controller.js';
 import { DerbiesService } from './derbies.service.js';
@@ -10,6 +11,7 @@ import { DERBY_STORE } from './types.js';
   controllers: [DerbiesController],
   providers: [
     DerbiesService,
+    OrgAuthGuard,
     {
       provide: DERBY_STORE,
       useFactory: () => new MemoryDerbyStore(),

@@ -282,6 +282,39 @@ export type EffortRecord = {
   createdAt: string;
 };
 
+/** Prefetched paid derby ticket for offline weigh-in station. */
+export type DerbyTicketRecord = {
+  id: string; // entryId
+  orgId: string;
+  derbySlug: string;
+  ticketCode: string;
+  displayName: string;
+  paidAt: string;
+  cachedAt: string;
+};
+
+/** Local weigh-in — written on the dock before sync. */
+export type WeighInLocalRecord = {
+  /** Client ULID — same as API clientId / sync op payload id. */
+  id: string;
+  orgId: string;
+  derbySlug: string;
+  entryId: string;
+  ticketCode: string;
+  displayName: string;
+  species: string;
+  massKg: number;
+  t: string;
+  station: string;
+  operatorId: string;
+  witness?: string;
+  photoKeys: string[];
+  /** Set after server accepts the weigh-in. */
+  serverId?: string;
+  syncedAt?: string;
+  createdAt: string;
+};
+
 export type DomainTableName =
   | 'orgs'
   | 'users'
@@ -303,4 +336,6 @@ export type DomainTableName =
   | 'recommendations'
   | 'recommendationFeedback'
   | 'effortLogs'
+  | 'derbyTickets'
+  | 'weighIns'
   | 'syncQueue';

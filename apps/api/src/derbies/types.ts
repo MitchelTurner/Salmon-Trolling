@@ -21,6 +21,8 @@ export type StoredDerbyEntry = {
 
 export type StoredWeighIn = {
   readonly id: string;
+  /** Client ULID — offline idempotency key. */
+  readonly clientId: string;
   readonly derbyId: string;
   readonly entryId: string;
   readonly species: string;
@@ -56,5 +58,6 @@ export interface DerbyStore {
   ): Promise<StoredDerbyEntry | null>;
   getEntryByTicketCode(ticketCode: string): Promise<StoredDerbyEntry | null>;
   putWeighIn(weighIn: StoredWeighIn): Promise<void>;
+  getWeighInByClientId(clientId: string): Promise<StoredWeighIn | null>;
   listWeighIns(derbyId: string): Promise<StoredWeighIn[]>;
 }

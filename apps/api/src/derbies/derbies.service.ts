@@ -3,9 +3,12 @@ import {
   mintDerbyTicketCode,
   rankLeaderboard,
   type CompleteDerbyRegistrationBody,
+  type CreateWeighInBody,
   type DerbyRegistrationReceipt,
+  type DerbyTicketRosterItem,
   type PublicLeaderboard,
   type RegisterDerbyBody,
+  type WeighInRecord,
 } from '@troll/shared';
 import { randomUUID } from 'node:crypto';
 import {
@@ -16,6 +19,7 @@ import {
   DERBY_STORE,
   type DerbyStore,
   type StoredDerbyEntry,
+  type StoredWeighIn,
 } from './types.js';
 
 function newId(prefix: string): string {
@@ -160,5 +164,111 @@ export class DerbiesService {
     };
     await this.store.putEntry(next);
     return toReceipt(derby.slug, next);
+  }
+
+  /**
+   * Paid ticket roster for station prefetch — dock is often offline.
+   */
+  async listTickets(
+    slug: string,
+    orgId: string,
+  ): Promise<DerbyTicketRosterItem[] | null> {
+    const derby = await this.requireOrgDerby(slug, orgId);
+    if (!derby) return null;
+    const entries = await this.store.listEntries(derby.id);
+    return entries
+      .filter((e) => e.paidAt && e.ticketCode)
+      .map((e) => ({
+        entryId: e.id,
+        ticketCode: e.ticketCode!,
+        displayName: e.displayName,
+        paidAt: e.paidAt!,
+      }))
+      .sort((a, b) => a.ticketCode.localeCompare(b.ticketCode));
+  }
+
+  /**
+   * POST /derbies/:slug/weighins — station operator; idempotent by clientId.
+   */
+  async createWeighIn(
+    slug: string,
+    orgId: string,
+    operatorId: string,
+    body: CreateWeighInBody,
+  ): Promise<WeighInRecord> {
+    const derby = await this.requireOrgDerby(slug, orgId);
+    if (!derby) throw new Error('derby not found');
+
+    const existing = await this.store.getWeighInByClientId(body.clientId);
+    if (existing) {
+      if (existing.derbyId !== derby.id) {
+        throw new Error('clientId already used for another derby');
+      }
+      return this.toWeighInRecord(existing);
+    }
+
+    const entry = await this.store.getEntryByTicketCode(body.ticketCode);
+    if (!entry || entry.derbyId !== derby.id) {
+      throw new Error('ticket not found');
+    }
+    if (!entry.paidAt || !entry.ticketCode) {
+      throw new Error('ticket not paid');
+    }
+
+    const species = body.species.trim().toLowerCase();
+    const eligible = derby.rules.eligibleSpecies.map((s) => s.toLowerCase());
+    if (!eligible.includes(species)) {
+      throw new Error(
+        `species "${body.species}" not eligible for this derby`,
+      );
+    }
+    if (derby.rules.minMassKg != null && body.massKg < derby.rules.minMassKg) {
+      throw new Error(
+        `mass below derby minimum (${derby.rules.minMassKg} kg)`,
+      );
+    }
+
+    const weighIn: StoredWeighIn = {
+      id: newId('wi'),
+      clientId: body.clientId,
+      derbyId: derby.id,
+      entryId: entry.id,
+      species: body.species.trim(),
+      massKg: body.massKg,
+      t: body.t,
+      station: body.station.trim(),
+      operatorId,
+      witness: body.witness?.trim() || undefined,
+      photoKeys: body.photoKeys ?? [],
+    };
+    await this.store.putWeighIn(weighIn);
+    return this.toWeighInRecord(weighIn);
+  }
+
+  private async requireOrgDerby(slug: string, orgId: string) {
+    const derby = await this.store.getBySlug(slug);
+    if (!derby) return null;
+    if (derby.orgId !== orgId) throw new Error('derby not in this org');
+    return derby;
+  }
+
+  private async toWeighInRecord(w: StoredWeighIn): Promise<WeighInRecord> {
+    const entry = await this.store.getEntry(w.entryId);
+    return {
+      id: w.id,
+      clientId: w.clientId,
+      derbyId: w.derbyId,
+      entryId: w.entryId,
+      ticketCode: entry?.ticketCode ?? 'DERBY-XXXXXXXX',
+      displayName: entry?.displayName ?? 'Unknown',
+      species: w.species,
+      massKg: w.massKg,
+      t: w.t,
+      station: w.station,
+      operatorId: w.operatorId,
+      witness: w.witness,
+      photoKeys: [...w.photoKeys],
+      voidedAt: w.voidedAt ?? null,
+    };
   }
 }

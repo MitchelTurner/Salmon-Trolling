@@ -4,6 +4,7 @@ import type {
   BundleRecord,
   CalibrationFitRecord,
   CatchRecord,
+  DerbyTicketRecord,
   GearItemRecord,
   HarvestRecordRow,
   MembershipRecord,
@@ -21,10 +22,11 @@ import type {
   TrackPointRecord,
   TripRecord,
   UserRecord,
+  WeighInLocalRecord,
 } from './types.js';
 
 export const DB_NAME = 'troll';
-export const DB_VERSION = 4;
+export const DB_VERSION = 5;
 
 /**
  * Local-first store. UI reads only from here; network never feeds screens
@@ -51,6 +53,8 @@ export class TrollDatabase extends Dexie {
   recommendations!: EntityTable<RecommendationRecord, 'id'>;
   recommendationFeedback!: EntityTable<RecommendationFeedbackRecord, 'id'>;
   effortLogs!: EntityTable<EffortRecord, 'id'>;
+  derbyTickets!: EntityTable<DerbyTicketRecord, 'id'>;
+  weighIns!: EntityTable<WeighInLocalRecord, 'id'>;
   syncQueue!: EntityTable<SyncQueueRecord, 'id'>;
 
   constructor(name = DB_NAME) {
@@ -88,8 +92,14 @@ export class TrollDatabase extends Dexie {
     });
 
     // Additive: effort logs including zero-catch trips (CPUE denominator).
-    this.version(DB_VERSION).stores({
+    this.version(4).stores({
       effortLogs: 'id, tripId, orgId, closedAt, catchCount',
+    });
+
+    // Additive: derby weigh-in station (offline dock).
+    this.version(DB_VERSION).stores({
+      derbyTickets: 'id, orgId, derbySlug, ticketCode, [derbySlug+ticketCode]',
+      weighIns: 'id, orgId, derbySlug, ticketCode, t, syncedAt',
     });
   }
 }
@@ -137,6 +147,8 @@ export type DomainTable = Table<
   | RegulationRecord
   | HarvestRecordRow
   | BundleRecord
+  | DerbyTicketRecord
+  | WeighInLocalRecord
   | SyncQueueRecord,
   string
 >;

@@ -24,4 +24,11 @@ describe('charter roles', () => {
     expect(roleAllows('CREW', 'org:manage')).toBe(false);
     expect(permissionsFor('VIEWER')).not.toContain('trip:write');
   });
+
+  it('lets station crew weigh in; viewers cannot', () => {
+    expect(roleAllows('CREW', 'derby:weighin')).toBe(true);
+    expect(roleAllows('CAPTAIN', 'derby:weighin')).toBe(true);
+    expect(roleAllows('OWNER', 'derby:weighin')).toBe(true);
+    expect(roleAllows('VIEWER', 'derby:weighin')).toBe(false);
+  });
 });

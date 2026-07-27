@@ -118,6 +118,53 @@ export type DerbyRegistrationReceipt = z.infer<
   typeof DerbyRegistrationReceiptSchema
 >;
 
+/** Paid ticket row for station prefetch (offline dock). */
+export const DerbyTicketRosterItemSchema = z.object({
+  entryId: z.string().min(1),
+  ticketCode: DerbyTicketCodeSchema,
+  displayName: z.string().min(1),
+  paidAt: z.string().datetime(),
+});
+
+export type DerbyTicketRosterItem = z.infer<typeof DerbyTicketRosterItemSchema>;
+
+/**
+ * Station weigh-in. `clientId` is the offline idempotency key (ULID).
+ * Records against a registered paid ticket only.
+ */
+export const CreateWeighInBodySchema = z.object({
+  clientId: z.string().min(1),
+  ticketCode: DerbyTicketCodeSchema,
+  species: z.string().trim().min(1).max(80),
+  massKg: z.number().positive().max(200),
+  station: z.string().trim().min(1).max(120),
+  /** ISO timestamp from the dock device clock. */
+  t: z.string().datetime(),
+  witness: z.string().trim().min(1).max(120).optional(),
+  photoKeys: z.array(z.string().min(1)).max(8).default([]),
+});
+
+export type CreateWeighInBody = z.infer<typeof CreateWeighInBodySchema>;
+
+export const WeighInRecordSchema = z.object({
+  id: z.string().min(1),
+  clientId: z.string().min(1),
+  derbyId: z.string().min(1),
+  entryId: z.string().min(1),
+  ticketCode: DerbyTicketCodeSchema,
+  displayName: z.string().min(1),
+  species: z.string().min(1),
+  massKg: z.number().positive(),
+  t: z.string().datetime(),
+  station: z.string().min(1),
+  operatorId: z.string().min(1),
+  witness: z.string().optional(),
+  photoKeys: z.array(z.string()),
+  voidedAt: z.string().datetime().nullable().optional(),
+});
+
+export type WeighInRecord = z.infer<typeof WeighInRecordSchema>;
+
 /**
  * Rank non-voided weigh-ins by mass descending.
  * Ties share the same rank; next rank skips (1, 2, 2, 4).

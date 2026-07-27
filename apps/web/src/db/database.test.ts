@@ -45,6 +45,8 @@ describe('TrollDatabase', () => {
       'recommendations',
       'recommendationFeedback',
       'effortLogs',
+      'derbyTickets',
+      'weighIns',
       'syncQueue',
     ];
 
