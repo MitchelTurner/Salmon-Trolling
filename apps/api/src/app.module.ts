@@ -4,6 +4,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { CalcModule } from './calc/calc.module.js';
 import { ProblemFilter } from './calc/problem.filter.js';
+import { SyncModule } from './sync/sync.module.js';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { ProblemFilter } from './calc/problem.filter.js';
       },
     ]),
     CalcModule,
+    SyncModule,
   ],
   providers: [
     {

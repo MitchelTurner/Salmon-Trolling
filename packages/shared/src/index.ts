@@ -1,3 +1,21 @@
-/** Shared Zod schemas and DTO types. Populated in later tasks. */
+/** Shared Zod schemas and DTO types. */
 
 export const PACKAGE_NAME = '@troll/shared' as const;
+
+export {
+  SYNC_BATCH_MAX,
+  SyncOpTypeSchema,
+  SyncOpSchema,
+  SyncRequestSchema,
+  SyncOpResultStatusSchema,
+  SyncOpResultSchema,
+  ServerSyncOpSchema,
+  SyncResponseSchema,
+  dequeueableOpIds,
+  type SyncOpType,
+  type SyncOp,
+  type SyncRequest,
+  type SyncOpResult,
+  type ServerSyncOp,
+  type SyncResponse,
+} from './sync.js';
