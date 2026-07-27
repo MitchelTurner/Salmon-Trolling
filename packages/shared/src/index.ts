@@ -68,3 +68,12 @@ export {
   type Permission,
   type Role,
 } from './roles.js';
+
+export {
+  GenerateGuestReportBodySchema,
+  GuestCatchReportSchema,
+  GuestReportCatchSchema,
+  type GenerateGuestReportBody,
+  type GuestCatchReport,
+  type GuestReportCatch,
+} from './guest-report.js';

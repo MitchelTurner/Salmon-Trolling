@@ -3,6 +3,7 @@ import { StorageQuotaBanner } from './db/index.js';
 import { CalculatorPage } from './routes/calculator/index.js';
 import { DockPage } from './routes/dock/index.js';
 import { RecommendPage } from './routes/recommend/index.js';
+import { GuestReportPage } from './routes/report/index.js';
 import { TripPage } from './routes/trip/index.js';
 
 export function App() {
@@ -14,6 +15,7 @@ export function App() {
         <Route path="/trip" element={<TripPage />} />
         <Route path="/dock" element={<DockPage />} />
         <Route path="/recommend" element={<RecommendPage />} />
+        <Route path="/r/:slug" element={<GuestReportPage />} />
         <Route path="*" element={<Navigate to="/calculator" replace />} />
       </Routes>
     </>

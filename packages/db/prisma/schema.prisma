@@ -32,6 +32,7 @@ model Org {
   recommendations Recommendation[]
   recommendationFeedback RecommendationFeedback[]
   effortLogs EffortLog[]
+  guestReports GuestCatchReport[]
 }
 
 enum OrgKind {
@@ -190,8 +191,34 @@ model Trip {
   catches  Catch[]
   samples  ProbeSample[]
   effort   EffortLog?
+  guestReports GuestCatchReport[]
 
   @@index([orgId, startedAt])
+}
+
+/// Shareable per-guest trip report — auto email at generate time.
+model GuestCatchReport {
+  id                 String    @id
+  orgId              String
+  tripId             String
+  guestName          String
+  guestEmail         String
+  boatName           String
+  captainName        String
+  startedAt          DateTime
+  closedAt           DateTime
+  conditionsSummary  String?
+  catches            Json
+  sharePath          String
+  createdAt          DateTime  @default(now())
+  emailedAt          DateTime?
+
+  org  Org  @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@index([orgId, createdAt])
+  @@index([tripId])
+  @@unique([sharePath])
 }
 
 /// Closed-trip effort. Zero catchCount is valid — blank trips are the CPUE denominator.
