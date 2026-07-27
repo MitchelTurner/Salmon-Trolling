@@ -115,3 +115,15 @@ export {
   type EstimatedConstantPerturbation,
   type UncertaintyComponent,
 } from './uncertainty.js';
+
+export {
+  DEFAULT_TANGLE_THRESHOLD_M,
+  analyzeSpread,
+  lateralOffsetFromTurnCenter,
+  localSpeedInTurn,
+  type AnalyzeSpreadInput,
+  type AnalyzeSpreadResult,
+  type RigTurnResult,
+  type SpreadRigInput,
+  type TangleWarning,
+} from './spread.js';
