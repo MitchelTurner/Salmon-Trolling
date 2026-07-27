@@ -219,3 +219,14 @@ export {
   type TrainGbtOptions,
   type UserFitSuccess,
 } from './fit/index.js';
+
+export {
+  fitBallCd,
+  fittedCdAssumption,
+  selectNarrowestFit,
+  type CalibrationFitResult,
+  type CalibrationSample,
+  type FitBallCdOptions,
+  type FitScope,
+  type StoredCalibrationFit,
+} from './calibration/index.js';

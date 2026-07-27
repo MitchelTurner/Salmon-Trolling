@@ -1,0 +1,50 @@
+{
+  "description": "First field golden — probe session shaped like a Ketchikan downrigger troll with planted ball Cd=0.62. Regenerated only when calibration physics change intentionally. This is the moment the product becomes real (TASKS 6.5).",
+  "meta": {
+    "region": "ketchikan",
+    "boatId": "boat_field_1",
+    "rigId": "rig_dr_1",
+    "sessionStartedAt": "2026-07-20T18:00:00.000Z",
+    "clockOffsetMs": 1200,
+    "plantedBallCd": 0.62
+  },
+  "samples": [
+    {
+      "measuredDepthM": 25.057244531099094,
+      "cableOutM": 30.48,
+      "stwMs": 1.286,
+      "ballMassKg": 4.5359237,
+      "ballShape": "sphere",
+      "cableDiameterM": 0.001143,
+      "cableLinearMassKgPerM": 0.00805,
+      "terminalDragN": 10
+    },
+    {
+      "measuredDepthM": 24.166306927995684,
+      "cableOutM": 30.48,
+      "stwMs": 1.4,
+      "ballMassKg": 4.5359237,
+      "ballShape": "sphere",
+      "cableDiameterM": 0.001143,
+      "cableLinearMassKgPerM": 0.00805,
+      "terminalDragN": 10
+    },
+    {
+      "measuredDepthM": 30.030120875395383,
+      "cableOutM": 36.576,
+      "stwMs": 1.2,
+      "ballMassKg": 4.5359237,
+      "ballShape": "sphere",
+      "cableDiameterM": 0.001143,
+      "cableLinearMassKgPerM": 0.00805,
+      "terminalDragN": 10
+    }
+  ],
+  "expectedFit": {
+    "scope": "RIG",
+    "ballCdMin": 0.58,
+    "ballCdMax": 0.66,
+    "rmseMaxM": 0.05,
+    "sampleN": 3
+  }
+}

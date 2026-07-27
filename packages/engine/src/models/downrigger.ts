@@ -50,6 +50,8 @@ export type DownriggerBall = {
   readonly shape: BallShape;
   /** Override shape-default Cd when measured/fitted. */
   readonly cd?: number;
+  /** Provenance for an overridden Cd. Defaults to MEASURED when cd is set. */
+  readonly cdSource?: ProvenanceTag | 'FITTED';
 };
 
 export type DownriggerCable = {
@@ -196,9 +198,9 @@ export function solveDownrigger(
     segments,
   });
 
-  const cdTag: ProvenanceTag =
+  const cdTag: ProvenanceTag | 'FITTED' =
     input.ball.cd !== undefined
-      ? 'MEASURED'
+      ? (input.ball.cdSource ?? 'MEASURED')
       : input.ball.shape === 'sphere'
         ? 'MANUFACTURER'
         : 'ESTIMATED';

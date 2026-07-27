@@ -6,9 +6,11 @@ import {
   RHO_STEEL,
   analyzeSpread,
   composeSigma,
+  fittedCdAssumption,
   kgPerM,
   lurePositionFromBall,
   resolveStw,
+  selectNarrowestFit,
   solveDownrigger,
   solveDiver,
   solveFlatline,
@@ -17,6 +19,7 @@ import {
   solveWeighted,
   solveWire,
   type ResolveStwResult,
+  type StoredCalibrationFit,
   type StwConfidence,
   type StwSource,
 } from '@troll/engine';
@@ -124,7 +127,11 @@ type NominalGeometry = {
   setbackAtStw: (stw: MetersPerSecond) => Meters;
 };
 
-function geometryAtStw(rig: RigBody, stw: MetersPerSecond): NominalGeometry {
+function geometryAtStw(
+  rig: RigBody,
+  stw: MetersPerSecond,
+  fit: StoredCalibrationFit | null = null,
+): NominalGeometry {
   switch (rig.delivery) {
     case 'downrigger': {
       const cableOut = meters(rig.cableOutM);
@@ -141,12 +148,18 @@ function geometryAtStw(rig: RigBody, stw: MetersPerSecond): NominalGeometry {
         rig.attractorDragN ?? DEFAULT_ATTRACTOR_DRAG_N,
       );
       const ballMass = kilograms(rig.ballMassKg);
+      const fittedCd = fit?.params.ballCd;
 
       const run = (stwVal: MetersPerSecond) => {
         const ball = solveDownrigger({
           cableOut,
           stw: stwVal,
-          ball: { mass: ballMass, shape: rig.ballShape },
+          ball: {
+            mass: ballMass,
+            shape: rig.ballShape,
+            cd: fittedCd,
+            cdSource: fittedCd !== undefined ? 'FITTED' : undefined,
+          },
           cable: { diameter, linearMass },
           terminalDrag,
         });
@@ -167,6 +180,9 @@ function geometryAtStw(rig: RigBody, stw: MetersPerSecond): NominalGeometry {
 
       const { ball, leader, lure } = run(stw);
       const defaults: string[] = [];
+      if (fit) {
+        defaults.push(fittedCdAssumption(fit));
+      }
       if (rig.cableLinearMassKgPerM === undefined) {
         defaults.push(
           'cable linearMass from solid stainless of stated diameter',
@@ -189,6 +205,7 @@ function geometryAtStw(rig: RigBody, stw: MetersPerSecond): NominalGeometry {
         ballDepth: ball.ballDepth,
         blowbackRad: ball.blowbackAngle,
         outOfRange: false,
+        fitRmse: fit ? meters(fit.rmseM) : undefined,
         assumptions: [...ball.assumptions, ...leader.assumptions, ...defaults],
         depthAtStw: (s) => run(s).lure.lureDepth,
         setbackAtStw: (s) => run(s).lure.lureSetback,
@@ -369,7 +386,14 @@ function fail(detail: string): CalcError {
 export function computeDepth(body: CalcDepthBody): CalcDepthOk | CalcError {
   try {
     const stwResolved = resolveStwFromBody(body.stw);
-    const geom = geometryAtStw(body.rig, stwResolved.stw);
+    const fit =
+      body.calibrationFits && body.calibrationFits.length > 0
+        ? selectNarrowestFit(body.calibrationFits, {
+            boatId: body.boatId,
+            rigId: body.rigId,
+          })
+        : null;
+    const geom = geometryAtStw(body.rig, stwResolved.stw, fit);
     return { ok: true, result: toDto(geom, stwResolved) };
   } catch (err) {
     return fail(err instanceof Error ? err.message : 'calculation failed');

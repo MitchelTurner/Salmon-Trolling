@@ -55,6 +55,43 @@ describe('computeDepth', () => {
     if (!result.ok) return;
     expect(result.result.depthM).toBeGreaterThan(0);
   });
+
+  it('applies the narrowest calibration fit and reports it in assumptions', () => {
+    const result = computeDepth({
+      ...sanityDepthBody,
+      stw: { speedThroughWaterMs: 1.286 },
+      boatId: 'boat_1',
+      rigId: 'rig_1',
+      calibrationFits: [
+        {
+          id: 'g',
+          scope: 'GLOBAL',
+          params: { ballCd: 0.47 },
+          rmseM: 0.5,
+          sampleN: 100,
+          fittedAt: '2026-07-01T00:00:00.000Z',
+        },
+        {
+          id: 'r',
+          scope: 'RIG',
+          boatId: 'boat_1',
+          rigId: 'rig_1',
+          params: { ballCd: 0.7 },
+          rmseM: 0.15,
+          sampleN: 20,
+          fittedAt: '2026-07-20T00:00:00.000Z',
+        },
+      ],
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(
+      result.result.assumptions.some((a) => a.includes('FITTED RIG')),
+    ).toBe(true);
+    expect(
+      result.result.assumptions.some((a) => a.includes('ball Cd=0.700')),
+    ).toBe(true);
+  });
 });
 
 describe('computeSpread', () => {

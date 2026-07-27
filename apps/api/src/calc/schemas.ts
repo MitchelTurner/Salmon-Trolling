@@ -101,9 +101,26 @@ export const RigSchema = z.discriminatedUnion('delivery', [
   FlatlineRigSchema,
 ]);
 
+const CalibrationFitSchema = z.object({
+  id: z.string().min(1),
+  scope: z.enum(['GLOBAL', 'BOAT', 'RIG']),
+  boatId: z.string().optional(),
+  rigId: z.string().optional(),
+  params: z.object({ ballCd: z.number().positive() }),
+  rmseM: z.number().nonnegative(),
+  sampleN: z.number().int().positive(),
+  fittedAt: z.string().datetime(),
+  supersededAt: z.string().datetime().optional(),
+});
+
 export const CalcDepthBodySchema = z.object({
   stw: StwInputSchema,
   rig: RigSchema,
+  /** Optional boat/rig ids for narrowest calibration fit selection. */
+  boatId: z.string().optional(),
+  rigId: z.string().optional(),
+  /** Active calibration fits; engine picks the narrowest matching scope. */
+  calibrationFits: z.array(CalibrationFitSchema).optional(),
 });
 
 export const SpreadRigSchema = z.object({
