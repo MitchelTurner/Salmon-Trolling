@@ -77,3 +77,15 @@ export {
   type GuestCatchReport,
   type GuestReportCatch,
 } from './guest-report.js';
+
+export {
+  FishTagCodeSchema,
+  FishTagSchema,
+  FishTagStatusSchema,
+  IssueFishTagBodySchema,
+  mintFishTagCode,
+  type FishTag,
+  type FishTagStatus,
+  type FishTagStatusStage,
+  type IssueFishTagBody,
+} from './fish-tag.js';
