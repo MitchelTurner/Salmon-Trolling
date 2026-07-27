@@ -8,6 +8,7 @@ import { BundlesModule } from './bundles/bundles.module.js';
 import { CalcModule } from './calc/calc.module.js';
 import { ProblemFilter } from './calc/problem.filter.js';
 import { CalibrationModule } from './calibration/calibration.module.js';
+import { DerbiesModule } from './derbies/derbies.module.js';
 import { FishTagsModule } from './fish-tags/fish-tags.module.js';
 import { GuestReportsModule } from './guest-reports/guest-reports.module.js';
 import { OrgModule } from './org/org.module.js';
@@ -39,6 +40,7 @@ import { SyncModule } from './sync/sync.module.js';
     BookingsModule,
     ProbeModule,
     CalibrationModule,
+    DerbiesModule,
   ],
   providers: [
     {

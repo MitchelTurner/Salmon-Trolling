@@ -121,3 +121,16 @@ export {
   type RebookBody,
   type SignWaiverBody,
 } from './bookings.js';
+
+export {
+  DerbyRulesSchema,
+  DerbySchema,
+  DerbySlugSchema,
+  LeaderboardEntrySchema,
+  PublicLeaderboardSchema,
+  rankLeaderboard,
+  type Derby,
+  type DerbyRules,
+  type LeaderboardEntry,
+  type PublicLeaderboard,
+} from './derby.js';
