@@ -1,3 +1,26 @@
 /** Pure depth-engine package. Physics models land in phase 1. */
 
-export const PACKAGE_NAME = '@troll/engine' as const;
+export {
+  ATTRACTOR_DRAG_TABLE,
+  CD_CYL_NORMAL,
+  CD_CYL_TANGENT,
+  CD_PANCAKE,
+  CD_SPHERE,
+  CD_TORPEDO,
+  CONSTANT_NAMES,
+  CONSTANT_PROVENANCE,
+  G,
+  NU_SEAWATER,
+  RHO_LEAD,
+  RHO_SEAWATER,
+  RHO_STEEL,
+  attractorDragN,
+  type AttractorDragEntry,
+  type AttractorDragKey,
+  type ConstantName,
+  type ConstantProvenance,
+  type KgPerM3,
+  type M2PerS,
+  type MPerS2,
+  type ProvenanceTag,
+} from './constants.js';
