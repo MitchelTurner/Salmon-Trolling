@@ -5,6 +5,8 @@ import { AppModule } from './app.module.js';
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, {
     logger: ['error', 'warn', 'log'],
+    // Required for Stripe webhook signature verification.
+    rawBody: true,
   });
 
   // Public calc is unauthenticated; CORS open for browser calculator clients.

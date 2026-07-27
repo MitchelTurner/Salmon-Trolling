@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { APP_FILTER, APP_PIPE } from '@nestjs/core';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { ZodValidationPipe } from 'nestjs-zod';
+import { BillingModule } from './billing/billing.module.js';
 import { BundlesModule } from './bundles/bundles.module.js';
 import { CalcModule } from './calc/calc.module.js';
 import { ProblemFilter } from './calc/problem.filter.js';
@@ -19,6 +20,7 @@ import { SyncModule } from './sync/sync.module.js';
     CalcModule,
     SyncModule,
     BundlesModule,
+    BillingModule,
   ],
   providers: [
     {
