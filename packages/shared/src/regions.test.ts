@@ -20,5 +20,7 @@ describe('regions', () => {
     expect(region.stations.nwsMarineZone).toBe('PKZ036');
     expect(region.stations.nwsCwfLocation).toBe('AJK');
     expect(region.stations.ndbcBuoy).toBe('46145');
+    expect(region.marinePoint.lat).toBeCloseTo(55.34);
+    expect(region.marinePoint.lon).toBeCloseTo(-131.65);
   });
 });

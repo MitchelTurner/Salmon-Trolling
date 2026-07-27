@@ -20,6 +20,12 @@ export type RegionStations = {
   readonly ndbcBuoy: string;
 };
 
+/** Representative point used for gridded marine models (Open-Meteo). */
+export type RegionPoint = {
+  readonly lat: number;
+  readonly lon: number;
+};
+
 export type Region = {
   readonly id: RegionId;
   readonly name: string;
@@ -30,6 +36,8 @@ export type Region = {
     readonly maxLat: number;
   };
   readonly stations: RegionStations;
+  /** Point query for gridded models — Tongass Narrows approaches. */
+  readonly marinePoint: RegionPoint;
 };
 
 export const REGIONS: Readonly<Record<RegionId, Region>> = {
@@ -50,6 +58,10 @@ export const REGIONS: Readonly<Record<RegionId, Region>> = {
       nwsCwfLocation: 'AJK',
       /** Central Dixon Entrance — nearest wave buoy with useful coverage. */
       ndbcBuoy: '46145',
+    },
+    marinePoint: {
+      lat: 55.34,
+      lon: -131.65,
     },
   },
 };

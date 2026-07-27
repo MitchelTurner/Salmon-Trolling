@@ -28,4 +28,5 @@ export {
   type RegionId,
   type Region,
   type RegionStations,
+  type RegionPoint,
 } from './regions.js';
