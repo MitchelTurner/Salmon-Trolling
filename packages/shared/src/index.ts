@@ -35,3 +35,16 @@ export {
   NOT_FOR_NAVIGATION_LABEL,
   type BathyTileRef,
 } from './bathy.js';
+
+export {
+  BUNDLE_SCHEMA_VERSION,
+  BUNDLE_DEFAULT_WINDOW_HOURS,
+  BundleMetaSchema,
+  alignBundleWindowStart,
+  bundleExpiresAt,
+  bundleCacheKey,
+  bundleObjectName,
+  type BundleMeta,
+  type BundlePayloadBody,
+  type ConditionsBundle,
+} from './bundle.js';
