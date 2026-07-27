@@ -12,7 +12,11 @@ export type RegionStations = {
   readonly coopsTide: string;
   /** NOAA CO-OPS current-prediction station in the Narrows. */
   readonly coopsCurrent: string;
-};
+  /** NWS marine coastal waters forecast zone (not a point grid). */
+  readonly nwsMarineZone: string;
+  /** NWS product location / CWA for Coastal Waters Forecast (CWF). */
+  readonly nwsCwfLocation: string;
+}
 
 export type Region = {
   readonly id: RegionId;
@@ -39,6 +43,9 @@ export const REGIONS: Readonly<Record<RegionId, Region>> = {
     stations: {
       coopsTide: '9450460',
       coopsCurrent: 'PCT2786',
+      /** Clarence Strait — covers Ketchikan approach waters. */
+      nwsMarineZone: 'PKZ036',
+      nwsCwfLocation: 'AJK',
     },
   },
 };

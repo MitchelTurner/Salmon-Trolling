@@ -1,0 +1,11 @@
+{
+  "@graph": [
+    {
+      "id": "f06ea47c-3165-4e0f-b597-2c28f65409bc",
+      "issuingOffice": "PAJK",
+      "issuanceTime": "2026-07-27T00:09:00+00:00",
+      "productCode": "CWF",
+      "productName": "Coastal Waters Forecast"
+    }
+  ]
+}

@@ -13,9 +13,11 @@ describe('regions', () => {
     expect(Object.keys(REGIONS)).toEqual(['ketchikan']);
   });
 
-  it('wires CO-OPS tide and Narrows current stations', () => {
+  it('wires CO-OPS and NWS marine stations', () => {
     const region = getRegion();
     expect(region.stations.coopsTide).toBe('9450460');
     expect(region.stations.coopsCurrent).toBe('PCT2786');
+    expect(region.stations.nwsMarineZone).toBe('PKZ036');
+    expect(region.stations.nwsCwfLocation).toBe('AJK');
   });
 });
