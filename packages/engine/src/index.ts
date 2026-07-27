@@ -142,3 +142,27 @@ export {
   type MoonPhaseName,
   type LightContext,
 } from './astro/index.js';
+
+export {
+  DEFAULT_RULE_SET,
+  RULES,
+  RULESET_VERSION,
+  assertSerializableRuleSet,
+  evaluateRuleSet,
+  evaluateRules,
+  matchPredicate,
+  type ComparePredicate,
+  type FinishHint,
+  type NumericField,
+  type Predicate,
+  type Rule,
+  type RuleContext,
+  type RuleEffect,
+  type RuleFactor,
+  type RuleMatch,
+  type RuleProvenance,
+  type RuleSet,
+  type StringField,
+  type TargetSpecies,
+  type TideStage,
+} from './rules/index.js';
