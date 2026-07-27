@@ -30,3 +30,8 @@ export {
   type RegionStations,
   type RegionPoint,
 } from './regions.js';
+
+export {
+  NOT_FOR_NAVIGATION_LABEL,
+  type BathyTileRef,
+} from './bathy.js';

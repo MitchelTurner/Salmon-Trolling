@@ -1,0 +1,65 @@
+{
+  "type": "FeatureCollection",
+  "name": "ketchikan-depth-contours",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "depthM": 10, "kind": "contour" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [-131.72, 55.30],
+          [-131.68, 55.31],
+          [-131.64, 55.32],
+          [-131.60, 55.33],
+          [-131.56, 55.34]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "depthM": 20, "kind": "contour" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [-131.74, 55.28],
+          [-131.70, 55.29],
+          [-131.66, 55.30],
+          [-131.62, 55.31],
+          [-131.58, 55.32],
+          [-131.54, 55.33]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "depthM": 50, "kind": "contour" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [-131.80, 55.26],
+          [-131.75, 55.27],
+          [-131.70, 55.28],
+          [-131.65, 55.29],
+          [-131.60, 55.30],
+          [-131.55, 55.31]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "depthM": 100, "kind": "contour" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [-131.90, 55.20],
+          [-131.85, 55.22],
+          [-131.80, 55.24],
+          [-131.75, 55.26],
+          [-131.70, 55.27],
+          [-131.65, 55.28]
+        ]
+      }
+    }
+  ]
+}

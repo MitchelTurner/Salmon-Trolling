@@ -9,4 +9,5 @@ export * from './open-meteo/index.js';
 export { OpenMeteoModule } from './open-meteo/open-meteo.module.js';
 export * from './adfg/index.js';
 export { AdfgModule } from './adfg/adfg.module.js';
+export * from './bathy/index.js';
 
