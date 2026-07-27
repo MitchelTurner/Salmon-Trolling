@@ -213,4 +213,118 @@ describe('DerbiesService', () => {
     expect(board?.weighInCount).toBe(1);
     expect(board?.entries[0]!.massKg).toBe(18.2);
   });
+
+  it('audits weigh-ins, voids, and dispute overturns', async () => {
+    const { service } = setup();
+    const pending = await service.register('ketchikan-king-2026', {
+      displayName: 'Alex River',
+      email: 'alex@example.com',
+      successUrl: 'https://troll.app/ok',
+      cancelUrl: 'https://troll.app/cancel',
+      waiver: { signerName: 'Alex River', signatureData: 'sig' },
+    });
+    const paid = await service.completeRegistration('ketchikan-king-2026', {
+      sessionId: pending.checkoutSessionId!,
+    });
+
+    const weighIn = await service.createWeighIn(
+      'ketchikan-king-2026',
+      'org_1',
+      'op_crew',
+      {
+        clientId: '01HXDISPUTE00000000000001',
+        ticketCode: paid.ticketCode!,
+        species: 'king',
+        massKg: 25,
+        station: 'thomas-basin',
+        t: '2026-07-02T20:00:00.000Z',
+        witness: 'Dock judge',
+        photoKeys: ['photo/x'],
+      },
+    );
+
+    const dispute = await service.openDispute(
+      'ketchikan-king-2026',
+      'org_1',
+      'op_crew',
+      { weighInId: weighIn.id, reason: 'Scale looked high' },
+    );
+    expect(dispute.status).toBe('open');
+
+    await expect(
+      service.resolveDispute(
+        'ketchikan-king-2026',
+        'org_1',
+        'op_crew',
+        'CREW',
+        dispute.id,
+        { resolution: 'overturn', notes: 'Recalibrated scale' },
+      ),
+    ).rejects.toThrow(/cannot resolve/);
+
+    const resolved = await service.resolveDispute(
+      'ketchikan-king-2026',
+      'org_1',
+      'captain_1',
+      'CAPTAIN',
+      dispute.id,
+      { resolution: 'overturn', notes: 'Recalibrated scale' },
+    );
+    expect(resolved.status).toBe('resolved');
+    expect(resolved.resolution).toBe('overturn');
+
+    const board = await service.leaderboard('ketchikan-king-2026');
+    expect(board?.weighInCount).toBe(0);
+
+    const audit = await service.listAudit('ketchikan-king-2026', 'org_1');
+    const actions = audit!.map((e) => e.action);
+    expect(actions).toContain('REGISTRATION_STARTED');
+    expect(actions).toContain('TICKET_ISSUED');
+    expect(actions).toContain('WEIGH_IN_RECORDED');
+    expect(actions).toContain('DISPUTE_OPENED');
+    expect(actions).toContain('WEIGH_IN_VOIDED');
+    expect(actions).toContain('DISPUTE_RESOLVED');
+    expect(JSON.stringify(audit)).not.toContain('@example.com');
+  });
+
+  it('voids a weigh-in without a dispute and drops it from the board', async () => {
+    const { service } = setup();
+    const pending = await service.register('ketchikan-king-2026', {
+      displayName: 'Blake',
+      email: 'blake@example.com',
+      successUrl: 'https://troll.app/ok',
+      cancelUrl: 'https://troll.app/cancel',
+      waiver: { signerName: 'Blake', signatureData: 'sig' },
+    });
+    const paid = await service.completeRegistration('ketchikan-king-2026', {
+      sessionId: pending.checkoutSessionId!,
+    });
+    const weighIn = await service.createWeighIn(
+      'ketchikan-king-2026',
+      'org_1',
+      'op_1',
+      {
+        clientId: '01HXVOID00000000000000001',
+        ticketCode: paid.ticketCode!,
+        species: 'king',
+        massKg: 14,
+        station: 'dock',
+        t: '2026-07-02T21:00:00.000Z',
+        photoKeys: [],
+      },
+    );
+
+    await service.voidWeighIn(
+      'ketchikan-king-2026',
+      'org_1',
+      'op_1',
+      weighIn.id,
+      { reason: 'Wrong species recorded' },
+    );
+
+    const board = await service.leaderboard('ketchikan-king-2026');
+    expect(board?.weighInCount).toBe(0);
+    const audit = await service.listAudit('ketchikan-king-2026', 'org_1');
+    expect(audit!.some((e) => e.action === 'WEIGH_IN_VOIDED')).toBe(true);
+  });
 });

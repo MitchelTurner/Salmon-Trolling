@@ -1,8 +1,10 @@
 import type {
   DerbyStore,
   SeedDerbyInput,
+  StoredAuditEvent,
   StoredDerby,
   StoredDerbyEntry,
+  StoredDispute,
   StoredWeighIn,
 } from './types.js';
 
@@ -14,6 +16,8 @@ export class MemoryDerbyStore implements DerbyStore {
   private readonly byTicket = new Map<string, string>();
   private readonly weighIns = new Map<string, StoredWeighIn>();
   private readonly weighInByClient = new Map<string, string>();
+  private readonly audits: StoredAuditEvent[] = [];
+  private readonly disputes = new Map<string, StoredDispute>();
 
   seed(input: SeedDerbyInput): StoredDerby {
     const derby: StoredDerby = {
@@ -78,6 +82,10 @@ export class MemoryDerbyStore implements DerbyStore {
     this.weighInByClient.set(weighIn.clientId, weighIn.id);
   }
 
+  async getWeighIn(weighInId: string): Promise<StoredWeighIn | null> {
+    return this.weighIns.get(weighInId) ?? null;
+  }
+
   async getWeighInByClientId(
     clientId: string,
   ): Promise<StoredWeighIn | null> {
@@ -87,5 +95,37 @@ export class MemoryDerbyStore implements DerbyStore {
 
   async listWeighIns(derbyId: string): Promise<StoredWeighIn[]> {
     return [...this.weighIns.values()].filter((w) => w.derbyId === derbyId);
+  }
+
+  async appendAudit(event: StoredAuditEvent): Promise<void> {
+    this.audits.push(event);
+  }
+
+  async listAudit(derbyId: string): Promise<StoredAuditEvent[]> {
+    return this.audits
+      .filter((e) => e.derbyId === derbyId)
+      .sort((a, b) => a.at.localeCompare(b.at));
+  }
+
+  async putDispute(dispute: StoredDispute): Promise<void> {
+    this.disputes.set(dispute.id, dispute);
+  }
+
+  async getDispute(disputeId: string): Promise<StoredDispute | null> {
+    return this.disputes.get(disputeId) ?? null;
+  }
+
+  async listDisputes(derbyId: string): Promise<StoredDispute[]> {
+    return [...this.disputes.values()]
+      .filter((d) => d.derbyId === derbyId)
+      .sort((a, b) => a.openedAt.localeCompare(b.openedAt));
+  }
+
+  async listOpenDisputesForWeighIn(
+    weighInId: string,
+  ): Promise<StoredDispute[]> {
+    return [...this.disputes.values()].filter(
+      (d) => d.weighInId === weighInId && d.status === 'open',
+    );
   }
 }

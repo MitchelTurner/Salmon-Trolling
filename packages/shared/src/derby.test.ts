@@ -66,6 +66,25 @@ describe('CreateWeighInBodySchema', () => {
   });
 });
 
+describe('dispute schemas', () => {
+  it('accepts overturn resolution', async () => {
+    const { ResolveDisputeBodySchema, OpenDisputeBodySchema } =
+      await import('./derby.js');
+    expect(
+      OpenDisputeBodySchema.safeParse({
+        weighInId: 'wi_1',
+        reason: 'Scale looked high',
+      }).success,
+    ).toBe(true);
+    expect(
+      ResolveDisputeBodySchema.safeParse({
+        resolution: 'overturn',
+        notes: 'Recalibrated',
+      }).success,
+    ).toBe(true);
+  });
+});
+
 describe('rankLeaderboard', () => {
   it('ranks by mass descending and skips voided', () => {
     const ranked = rankLeaderboard([

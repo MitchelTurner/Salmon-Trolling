@@ -165,6 +165,85 @@ export const WeighInRecordSchema = z.object({
 
 export type WeighInRecord = z.infer<typeof WeighInRecordSchema>;
 
+/** Append-only derby audit events — the product when prizes are disputed. */
+export const DerbyAuditActionSchema = z.enum([
+  'REGISTRATION_STARTED',
+  'TICKET_ISSUED',
+  'WEIGH_IN_RECORDED',
+  'WEIGH_IN_VOIDED',
+  'DISPUTE_OPENED',
+  'DISPUTE_RESOLVED',
+]);
+
+export type DerbyAuditAction = z.infer<typeof DerbyAuditActionSchema>;
+
+export const DerbyAuditEventSchema = z.object({
+  id: z.string().min(1),
+  derbyId: z.string().min(1),
+  action: DerbyAuditActionSchema,
+  actorId: z.string().min(1),
+  at: z.string().datetime(),
+  weighInId: z.string().min(1).optional(),
+  entryId: z.string().min(1).optional(),
+  disputeId: z.string().min(1).optional(),
+  /** Human-readable detail safe to show operators. */
+  detail: z.string().min(1).max(500),
+  /** Structured context (mass, station, resolution, …) — no emails. */
+  meta: z.record(z.unknown()).default({}),
+});
+
+export type DerbyAuditEvent = z.infer<typeof DerbyAuditEventSchema>;
+
+export const VoidWeighInBodySchema = z.object({
+  reason: z.string().trim().min(1).max(500),
+});
+
+export type VoidWeighInBody = z.infer<typeof VoidWeighInBodySchema>;
+
+export const DisputeStatusSchema = z.enum(['open', 'resolved']);
+export type DisputeStatus = z.infer<typeof DisputeStatusSchema>;
+
+export const DisputeResolutionSchema = z.enum([
+  /** Keep the weigh-in on the board. */
+  'uphold',
+  /** Void the weigh-in (remove from leaderboard). */
+  'overturn',
+  /** Close without changing the weigh-in. */
+  'dismiss',
+]);
+
+export type DisputeResolution = z.infer<typeof DisputeResolutionSchema>;
+
+export const OpenDisputeBodySchema = z.object({
+  weighInId: z.string().min(1),
+  reason: z.string().trim().min(1).max(500),
+});
+
+export type OpenDisputeBody = z.infer<typeof OpenDisputeBodySchema>;
+
+export const ResolveDisputeBodySchema = z.object({
+  resolution: DisputeResolutionSchema,
+  notes: z.string().trim().min(1).max(500),
+});
+
+export type ResolveDisputeBody = z.infer<typeof ResolveDisputeBodySchema>;
+
+export const DerbyDisputeSchema = z.object({
+  id: z.string().min(1),
+  derbyId: z.string().min(1),
+  weighInId: z.string().min(1),
+  status: DisputeStatusSchema,
+  reason: z.string().min(1),
+  openedBy: z.string().min(1),
+  openedAt: z.string().datetime(),
+  resolution: DisputeResolutionSchema.optional(),
+  resolvedBy: z.string().min(1).optional(),
+  resolvedAt: z.string().datetime().optional(),
+  notes: z.string().optional(),
+});
+
+export type DerbyDispute = z.infer<typeof DerbyDisputeSchema>;
+
 /**
  * Rank non-voided weigh-ins by mass descending.
  * Ties share the same rank; next rank skips (1, 2, 2, 4).

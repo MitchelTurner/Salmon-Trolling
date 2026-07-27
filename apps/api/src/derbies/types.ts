@@ -1,8 +1,15 @@
-import type { Derby, DerbyRules } from '@troll/shared';
+import type {
+  Derby,
+  DerbyAuditEvent,
+  DerbyDispute,
+  DerbyRules,
+} from '@troll/shared';
 
 export const DERBY_STORE = Symbol('DERBY_STORE');
 
 export type StoredDerby = Derby;
+export type StoredAuditEvent = DerbyAuditEvent;
+export type StoredDispute = DerbyDispute;
 
 export type StoredDerbyEntry = {
   readonly id: string;
@@ -58,6 +65,13 @@ export interface DerbyStore {
   ): Promise<StoredDerbyEntry | null>;
   getEntryByTicketCode(ticketCode: string): Promise<StoredDerbyEntry | null>;
   putWeighIn(weighIn: StoredWeighIn): Promise<void>;
+  getWeighIn(weighInId: string): Promise<StoredWeighIn | null>;
   getWeighInByClientId(clientId: string): Promise<StoredWeighIn | null>;
   listWeighIns(derbyId: string): Promise<StoredWeighIn[]>;
+  appendAudit(event: StoredAuditEvent): Promise<void>;
+  listAudit(derbyId: string): Promise<StoredAuditEvent[]>;
+  putDispute(dispute: StoredDispute): Promise<void>;
+  getDispute(disputeId: string): Promise<StoredDispute | null>;
+  listDisputes(derbyId: string): Promise<StoredDispute[]>;
+  listOpenDisputesForWeighIn(weighInId: string): Promise<StoredDispute[]>;
 }

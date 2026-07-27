@@ -448,6 +448,8 @@ model Derby {
 
   entries  DerbyEntry[]
   weighIns WeighIn[]
+  audits   DerbyAuditEvent[]
+  disputes DerbyDispute[]
 }
 
 model DerbyEntry {
@@ -467,6 +469,8 @@ model DerbyEntry {
 
 model WeighIn {
   id         String   @id
+  /// Client ULID — offline idempotency key.
+  clientId   String   @unique
   derbyId    String
   entryId    String
   species    String
@@ -479,10 +483,49 @@ model WeighIn {
   voidedAt   DateTime?
   voidReason String?
 
-  derby Derby      @relation(fields: [derbyId], references: [id], onDelete: Cascade)
-  entry DerbyEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  derby    Derby          @relation(fields: [derbyId], references: [id], onDelete: Cascade)
+  entry    DerbyEntry     @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  disputes DerbyDispute[]
 
   @@index([derbyId, massKg])
+}
+
+/// Append-only. Derbies get disputed; the audit trail is the product.
+model DerbyAuditEvent {
+  id        String   @id
+  derbyId   String
+  action    String
+  actorId   String
+  at        DateTime
+  weighInId String?
+  entryId   String?
+  disputeId String?
+  detail    String
+  meta      Json
+
+  derby Derby @relation(fields: [derbyId], references: [id], onDelete: Cascade)
+
+  @@index([derbyId, at])
+}
+
+model DerbyDispute {
+  id         String    @id
+  derbyId    String
+  weighInId  String
+  status     String // open | resolved
+  reason     String
+  openedBy   String
+  openedAt   DateTime
+  resolution String? // uphold | overturn | dismiss
+  resolvedBy String?
+  resolvedAt DateTime?
+  notes      String?
+
+  derby   Derby   @relation(fields: [derbyId], references: [id], onDelete: Cascade)
+  weighIn WeighIn @relation(fields: [weighInId], references: [id], onDelete: Cascade)
+
+  @@index([derbyId, status])
+  @@index([weighInId])
 }
 
 // ---------- recommendations ----------
