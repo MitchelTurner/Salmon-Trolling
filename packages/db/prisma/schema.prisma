@@ -408,12 +408,16 @@ model FishTag {
 }
 
 model ProcessingManifest {
-  id          String   @id
-  orgId       String
-  processor   String
-  deliveredAt DateTime?
-  createdAt   DateTime @default(now())
-  tags        FishTag[]
+  id           String    @id
+  orgId        String
+  processor    String
+  boatName     String?
+  deliveredAt  DateTime?
+  /// Plain-text document a processor will accept / sign.
+  documentText String?
+  lines        Json?
+  createdAt    DateTime  @default(now())
+  tags         FishTag[]
 
   @@index([orgId, createdAt])
 }

@@ -21,6 +21,10 @@ export class MemoryFishTagStore implements FishTagStore {
   async getByCode(code: string): Promise<StoredFishTag | null> {
     return this.byCode.get(code.toUpperCase()) ?? null;
   }
+
+  async update(tag: StoredFishTag): Promise<void> {
+    await this.put(tag);
+  }
 }
 
 export class MemoryCatchLookup implements CatchLookup {

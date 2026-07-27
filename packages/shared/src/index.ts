@@ -89,3 +89,13 @@ export {
   type FishTagStatusStage,
   type IssueFishTagBody,
 } from './fish-tag.js';
+
+export {
+  CreateManifestBodySchema,
+  ManifestLineSchema,
+  ProcessingManifestSchema,
+  formatManifestDocument,
+  type CreateManifestBody,
+  type ManifestLine,
+  type ProcessingManifest,
+} from './processing.js';

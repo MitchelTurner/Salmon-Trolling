@@ -9,6 +9,7 @@ import { ProblemFilter } from './calc/problem.filter.js';
 import { FishTagsModule } from './fish-tags/fish-tags.module.js';
 import { GuestReportsModule } from './guest-reports/guest-reports.module.js';
 import { OrgModule } from './org/org.module.js';
+import { ProcessingModule } from './processing/processing.module.js';
 import { RecommendationsModule } from './recommendations/recommendations.module.js';
 import { SyncModule } from './sync/sync.module.js';
 
@@ -29,6 +30,7 @@ import { SyncModule } from './sync/sync.module.js';
     OrgModule,
     GuestReportsModule,
     FishTagsModule,
+    ProcessingModule,
   ],
   providers: [
     {

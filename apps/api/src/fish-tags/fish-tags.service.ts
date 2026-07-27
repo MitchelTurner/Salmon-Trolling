@@ -13,6 +13,8 @@ import {
   type StoredFishTag,
 } from './types.js';
 
+export type { StoredFishTag };
+
 function newId(prefix: string): string {
   return `${prefix}_${randomUUID().replace(/-/g, '').slice(0, 22)}`;
 }
@@ -47,10 +49,31 @@ export class FishTagsService {
       createdAt,
       statusPath: `/tag/${code}`,
       boatName: catchRow.boatName,
+      massKg: catchRow.massKg,
       stage: 'tagged',
     };
     await this.tags.put(tag);
     return tag;
+  }
+
+  /** Used by processing manifests to advance tag stage. */
+  async markAtProcessor(
+    code: string,
+    processor: string,
+  ): Promise<StoredFishTag | null> {
+    const tag = await this.tags.getByCode(code);
+    if (!tag) return null;
+    const next: StoredFishTag = {
+      ...tag,
+      processor,
+      stage: 'at_processor',
+    };
+    await this.tags.update(next);
+    return next;
+  }
+
+  async getByCode(code: string): Promise<StoredFishTag | null> {
+    return this.tags.getByCode(code);
   }
 
   async status(code: string): Promise<FishTagStatus | null> {
