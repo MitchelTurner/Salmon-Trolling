@@ -166,3 +166,24 @@ export {
   type TargetSpecies,
   type TideStage,
 } from './rules/index.js';
+
+export {
+  BASELINE_DEPTH_MAX_M,
+  BASELINE_DEPTH_MIN_M,
+  BASELINE_LEADER_M,
+  BASELINE_SPEED_MAX_MS,
+  BASELINE_SPEED_MIN_MS,
+  RULES_SCORE_CAP,
+  clampRecommendationScore,
+  nonEmptyReasons,
+  observationForFactor,
+  recommendFromRules,
+  scoreFromRuleWeights,
+  type Band,
+  type GearSuggestion,
+  type NonEmptyArray,
+  type Reason,
+  type RecommendFromRulesInput,
+  type Recommendation,
+  type RecommendationBasis,
+} from './recommend/index.js';
