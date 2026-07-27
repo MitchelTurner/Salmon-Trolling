@@ -1,0 +1,34 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color: #1a1a1a;
+  background: #ffffff;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Sounding-style depth: integer prominent, tenths as subscript-sized suffix */
+.sounding-int {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}
+
+.sounding-tenths {
+  font-size: 0.55em;
+  vertical-align: baseline;
+  position: relative;
+  top: 0.35em;
+  font-variant-numeric: tabular-nums;
+}
