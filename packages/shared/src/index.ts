@@ -99,3 +99,10 @@ export {
   type ManifestLine,
   type ProcessingManifest,
 } from './processing.js';
+
+export {
+  CreateShippingBodySchema,
+  ShippingRecordSchema,
+  type CreateShippingBody,
+  type ShippingRecord,
+} from './shipping.js';

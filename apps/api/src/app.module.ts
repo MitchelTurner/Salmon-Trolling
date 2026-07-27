@@ -11,6 +11,7 @@ import { GuestReportsModule } from './guest-reports/guest-reports.module.js';
 import { OrgModule } from './org/org.module.js';
 import { ProcessingModule } from './processing/processing.module.js';
 import { RecommendationsModule } from './recommendations/recommendations.module.js';
+import { ShippingModule } from './shipping/shipping.module.js';
 import { SyncModule } from './sync/sync.module.js';
 
 @Module({
@@ -31,6 +32,7 @@ import { SyncModule } from './sync/sync.module.js';
     GuestReportsModule,
     FishTagsModule,
     ProcessingModule,
+    ShippingModule,
   ],
   providers: [
     {

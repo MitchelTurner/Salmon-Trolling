@@ -72,6 +72,22 @@ export class FishTagsService {
     return next;
   }
 
+  async markShipped(
+    code: string,
+    input: { carrier: string; tracking: string },
+  ): Promise<StoredFishTag | null> {
+    const tag = await this.tags.getByCode(code);
+    if (!tag) return null;
+    const next: StoredFishTag = {
+      ...tag,
+      carrier: input.carrier,
+      tracking: input.tracking,
+      stage: 'shipped',
+    };
+    await this.tags.update(next);
+    return next;
+  }
+
   async getByCode(code: string): Promise<StoredFishTag | null> {
     return this.tags.getByCode(code);
   }
