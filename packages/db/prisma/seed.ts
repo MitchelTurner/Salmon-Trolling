@@ -18,6 +18,18 @@ const ids = {
   user: '01JSEEDUSER100000000000000',
   membership: '01JSEEDMEM1000000000000000',
   boat: '01JSEEDBOAT100000000000000',
+  charter: {
+    org: '01JSEEDORGCHARTER0000000000',
+    owner: '01JSEEDUSEROWNER00000000000',
+    captain: '01JSEEDUSERCAPTAIN000000000',
+    crew: '01JSEEDUSERCREW000000000000',
+    memOwner: '01JSEEDMEMOWNER000000000000',
+    memCaptain: '01JSEEDMEMCAPTAIN0000000000',
+    memCrew: '01JSEEDMEMCREW0000000000000',
+    boatA: '01JSEEDBOATCHARTA0000000000',
+    boatB: '01JSEEDBOATCHARTB0000000000',
+    assignCrewA: '01JSEEDASSIGNCREWA000000000',
+  },
   gear: {
     hotspot11Green: '01JSEEDGFLASH1000000000000',
     meltonDodger: '01JSEEDGDODGE1000000000000',
@@ -284,13 +296,138 @@ async function main(): Promise<void> {
     },
   });
 
-  const [gearCount, rigCount] = await Promise.all([
+  // Multi-boat charter org: owner + captain + deckhand on boat A (no billing for crew).
+  const charter = await prisma.org.upsert({
+    where: { id: ids.charter.org },
+    create: {
+      id: ids.charter.org,
+      name: 'Misty Fjords Charters',
+      kind: OrgKind.CHARTER,
+    },
+    update: {
+      name: 'Misty Fjords Charters',
+      kind: OrgKind.CHARTER,
+    },
+  });
+
+  await prisma.user.upsert({
+    where: { id: ids.charter.owner },
+    create: {
+      id: ids.charter.owner,
+      email: 'owner@mistyfjords.example',
+      displayName: 'Charter Owner',
+    },
+    update: { displayName: 'Charter Owner' },
+  });
+  await prisma.user.upsert({
+    where: { id: ids.charter.captain },
+    create: {
+      id: ids.charter.captain,
+      email: 'captain@mistyfjords.example',
+      displayName: 'Captain',
+    },
+    update: { displayName: 'Captain' },
+  });
+  await prisma.user.upsert({
+    where: { id: ids.charter.crew },
+    create: {
+      id: ids.charter.crew,
+      email: 'deck@mistyfjords.example',
+      displayName: 'Deckhand',
+    },
+    update: { displayName: 'Deckhand' },
+  });
+
+  await prisma.membership.upsert({
+    where: {
+      orgId_userId: { orgId: charter.id, userId: ids.charter.owner },
+    },
+    create: {
+      id: ids.charter.memOwner,
+      orgId: charter.id,
+      userId: ids.charter.owner,
+      role: Role.OWNER,
+    },
+    update: { role: Role.OWNER },
+  });
+  await prisma.membership.upsert({
+    where: {
+      orgId_userId: { orgId: charter.id, userId: ids.charter.captain },
+    },
+    create: {
+      id: ids.charter.memCaptain,
+      orgId: charter.id,
+      userId: ids.charter.captain,
+      role: Role.CAPTAIN,
+    },
+    update: { role: Role.CAPTAIN },
+  });
+  await prisma.membership.upsert({
+    where: {
+      orgId_userId: { orgId: charter.id, userId: ids.charter.crew },
+    },
+    create: {
+      id: ids.charter.memCrew,
+      orgId: charter.id,
+      userId: ids.charter.crew,
+      role: Role.CREW,
+    },
+    update: { role: Role.CREW },
+  });
+
+  await prisma.boat.upsert({
+    where: { id: ids.charter.boatA },
+    create: {
+      id: ids.charter.boatA,
+      orgId: charter.id,
+      name: 'Northern Light',
+      hasPaddleWheel: true,
+      hasN2K: true,
+      hasProbe: false,
+    },
+    update: { name: 'Northern Light' },
+  });
+  await prisma.boat.upsert({
+    where: { id: ids.charter.boatB },
+    create: {
+      id: ids.charter.boatB,
+      orgId: charter.id,
+      name: 'Sea Bear',
+      hasPaddleWheel: false,
+      hasN2K: false,
+      hasProbe: false,
+    },
+    update: { name: 'Sea Bear' },
+  });
+
+  await prisma.boatAssignment.upsert({
+    where: {
+      boatId_userId: {
+        boatId: ids.charter.boatA,
+        userId: ids.charter.crew,
+      },
+    },
+    create: {
+      id: ids.charter.assignCrewA,
+      orgId: charter.id,
+      boatId: ids.charter.boatA,
+      userId: ids.charter.crew,
+      active: true,
+    },
+    update: { active: true },
+  });
+
+  const [gearCount, rigCount, charterBoats] = await Promise.all([
     prisma.gearItem.count({ where: { orgId: null } }),
     prisma.rig.count({ where: { orgId: org.id } }),
+    prisma.boat.count({ where: { orgId: charter.id } }),
   ]);
 
   console.log(
     `Seeded personal org ${org.id}: 1 boat, ${rigCount} rigs, ${gearCount} shared gear items`,
+  );
+  console.log(
+    `Seeded charter org ${charter.id}: ${charterBoats} boats, owner/captain/crew (crew on Northern Light)`,
   );
 }
 

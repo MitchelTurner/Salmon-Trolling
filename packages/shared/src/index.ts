@@ -58,3 +58,13 @@ export {
   type RecommendationFeedbackBody,
   type RuleContextBody,
 } from './recommendation.js';
+
+export {
+  ROLES,
+  RoleSchema,
+  canManageBilling,
+  permissionsFor,
+  roleAllows,
+  type Permission,
+  type Role,
+} from './roles.js';

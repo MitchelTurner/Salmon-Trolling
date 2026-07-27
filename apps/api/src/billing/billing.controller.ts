@@ -7,11 +7,12 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { OrgAuthGuard, type AuthedRequest } from '../auth/org-auth.guard.js';
+import { RequirePermission } from '../auth/require-permission.js';
 import { BillingService } from './billing.service.js';
 import { CheckoutBodyDto, PortalBodyDto } from './billing.dto.js';
 
 @Controller('billing')
-@UseGuards(OrgAuthGuard)
+@UseGuards(OrgAuthGuard, RequirePermission('billing:manage'))
 export class BillingController {
   constructor(private readonly billing: BillingService) {}
 

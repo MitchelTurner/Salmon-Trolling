@@ -82,12 +82,29 @@ model Boat {
   hasN2K         Boolean @default(false)
   hasProbe       Boolean @default(false)
 
-  org    Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  trips  Trip[]
-  probes Probe[]
-  fits   CalibrationFit[]
+  org         Org              @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  trips       Trip[]
+  probes      Probe[]
+  fits        CalibrationFit[]
+  assignments BoatAssignment[]
 
   @@index([orgId])
+}
+
+/// Crew assigned to a boat. Deckhands log on the boat device under this link.
+model BoatAssignment {
+  id        String   @id
+  orgId     String
+  boatId    String
+  userId    String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  boat Boat @relation(fields: [boatId], references: [id], onDelete: Cascade)
+
+  @@unique([boatId, userId])
+  @@index([orgId, userId])
+  @@index([boatId, active])
 }
 
 model Rig {

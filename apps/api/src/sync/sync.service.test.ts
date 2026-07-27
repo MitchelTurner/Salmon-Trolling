@@ -22,13 +22,13 @@ describe('SyncService', () => {
     };
 
     const first = await service.sync(
-      { orgId: 'orgA', userId: 'u1' },
+      { orgId: 'orgA', userId: 'u1', role: 'OWNER' },
       { ops: [op] },
     );
     expect(first.results).toEqual([{ id: 'op1', status: 'accepted' }]);
 
     const second = await service.sync(
-      { orgId: 'orgA', userId: 'u1' },
+      { orgId: 'orgA', userId: 'u1', role: 'OWNER' },
       { ops: [op] },
     );
     expect(second.results).toEqual([{ id: 'op1', status: 'duplicate' }]);
@@ -36,7 +36,7 @@ describe('SyncService', () => {
 
   it('supports partial success in a batch', async () => {
     const res = await service.sync(
-      { orgId: 'orgA', userId: 'u1' },
+      { orgId: 'orgA', userId: 'u1', role: 'OWNER' },
       {
         ops: [
           {
@@ -64,7 +64,7 @@ describe('SyncService', () => {
 
   it('scopes pull to the authenticated org and resumes by cursor', async () => {
     await service.sync(
-      { orgId: 'orgA', userId: 'u1' },
+      { orgId: 'orgA', userId: 'u1', role: 'OWNER' },
       {
         ops: [
           {
@@ -87,7 +87,7 @@ describe('SyncService', () => {
     );
 
     const page1 = await service.sync(
-      { orgId: 'orgA', userId: 'u1' },
+      { orgId: 'orgA', userId: 'u1', role: 'OWNER' },
       { ops: [], pullLimit: 1 },
     );
     expect(page1.serverOps).toHaveLength(1);
@@ -95,14 +95,14 @@ describe('SyncService', () => {
     expect(page1.nextCursor).toBeTruthy();
 
     const page2 = await service.sync(
-      { orgId: 'orgA', userId: 'u1' },
+      { orgId: 'orgA', userId: 'u1', role: 'OWNER' },
       { ops: [], cursor: page1.nextCursor ?? undefined, pullLimit: 1 },
     );
     expect(page2.serverOps).toHaveLength(1);
     expect(page2.serverOps[0]?.id).not.toBe(page1.serverOps[0]?.id);
 
     const otherOrg = await service.sync(
-      { orgId: 'orgB', userId: 'u2' },
+      { orgId: 'orgB', userId: 'u2', role: 'OWNER' },
       { ops: [] },
     );
     expect(otherOrg.serverOps).toHaveLength(0);
@@ -110,7 +110,7 @@ describe('SyncService', () => {
 
   it('never reads orgId from the op payload for scoping', async () => {
     await service.sync(
-      { orgId: 'orgA', userId: 'u1' },
+      { orgId: 'orgA', userId: 'u1', role: 'OWNER' },
       {
         ops: [
           {
@@ -125,13 +125,13 @@ describe('SyncService', () => {
     );
 
     const evil = await service.sync(
-      { orgId: 'orgEvil', userId: 'u9' },
+      { orgId: 'orgEvil', userId: 'u9', role: 'CREW' },
       { ops: [] },
     );
     expect(evil.serverOps).toHaveLength(0);
 
     const mine = await service.sync(
-      { orgId: 'orgA', userId: 'u1' },
+      { orgId: 'orgA', userId: 'u1', role: 'OWNER' },
       { ops: [] },
     );
     expect(mine.serverOps).toHaveLength(1);
