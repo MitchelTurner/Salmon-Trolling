@@ -62,6 +62,7 @@ const ENTITY_TO_TABLE: Record<string, Exclude<DomainTableName, 'syncQueue'>> = {
   Bundle: 'bundles',
   Recommendation: 'recommendations',
   RecommendationFeedback: 'recommendationFeedback',
+  EffortLog: 'effortLogs',
 };
 
 function toWireOp(row: SyncQueueRecord): SyncOp {

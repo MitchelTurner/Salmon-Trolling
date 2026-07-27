@@ -54,8 +54,16 @@ export function TripPage() {
     setBusy(true);
     void closeTripRecording()
       .then((result) => {
+        const catches = result.effort?.catchCount ?? 0;
+        const hours = result.effort?.durationHours;
+        const effortNote =
+          hours != null
+            ? catches === 0
+              ? `Effort logged: ${hours.toFixed(1)} h, 0 catches (blank trips count).`
+              : `Effort logged: ${hours.toFixed(1)} h, ${catches} catch${catches === 1 ? '' : 'es'}.`
+            : '';
         setCloseSummary(
-          `Trip closed — kept ${result.pointsAfter} of ${result.pointsBefore} points after simplify.`,
+          `Trip closed — kept ${result.pointsAfter} of ${result.pointsBefore} points after simplify. ${effortNote}`.trim(),
         );
       })
       .catch((err: unknown) => {

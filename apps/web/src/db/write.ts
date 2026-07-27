@@ -26,6 +26,7 @@ const ENTITY_BY_TABLE: Record<Exclude<DomainTableName, 'syncQueue'>, string> = {
   bundles: 'Bundle',
   recommendations: 'Recommendation',
   recommendationFeedback: 'RecommendationFeedback',
+  effortLogs: 'EffortLog',
 };
 
 type RecordWithId = { id: string } & Record<string, unknown>;

@@ -264,6 +264,24 @@ export type RecommendationFeedbackRecord = {
   createdAt: string;
 };
 
+/**
+ * Per-trip effort log. Zero-catch trips are retained — they are the CPUE
+ * denominator (03-recommendations.md).
+ */
+export type EffortRecord = {
+  /** Same as tripId — one effort row per closed trip. */
+  id: string;
+  tripId: string;
+  orgId: string;
+  startedAt: string;
+  closedAt: string;
+  durationHours: number;
+  /** Active catches; 0 is valid and required for blank trips. */
+  catchCount: number;
+  keptCount: number;
+  createdAt: string;
+};
+
 export type DomainTableName =
   | 'orgs'
   | 'users'
@@ -284,4 +302,5 @@ export type DomainTableName =
   | 'bundles'
   | 'recommendations'
   | 'recommendationFeedback'
+  | 'effortLogs'
   | 'syncQueue';

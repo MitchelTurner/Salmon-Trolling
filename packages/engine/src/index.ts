@@ -187,3 +187,12 @@ export {
   type Recommendation,
   type RecommendationBasis,
 } from './recommend/index.js';
+
+export {
+  assertEffortIncludesZeros,
+  buildEffortSample,
+  catchPerHour,
+  tripDurationHours,
+  type CatchPerHourResult,
+  type EffortSample,
+} from './effort/index.js';

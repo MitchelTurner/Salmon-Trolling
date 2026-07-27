@@ -11,6 +11,7 @@ import type {
   PhotoRecord,
   ProbeRecord,
   ProbeSampleRecord,
+  EffortRecord,
   RecommendationFeedbackRecord,
   RecommendationRecord,
   RegulationRecord,
@@ -23,7 +24,7 @@ import type {
 } from './types.js';
 
 export const DB_NAME = 'troll';
-export const DB_VERSION = 3;
+export const DB_VERSION = 4;
 
 /**
  * Local-first store. UI reads only from here; network never feeds screens
@@ -49,6 +50,7 @@ export class TrollDatabase extends Dexie {
   bundles!: EntityTable<BundleRecord, 'id'>;
   recommendations!: EntityTable<RecommendationRecord, 'id'>;
   recommendationFeedback!: EntityTable<RecommendationFeedbackRecord, 'id'>;
+  effortLogs!: EntityTable<EffortRecord, 'id'>;
   syncQueue!: EntityTable<SyncQueueRecord, 'id'>;
 
   constructor(name = DB_NAME) {
@@ -80,9 +82,14 @@ export class TrollDatabase extends Dexie {
     });
 
     // Additive: recommendation feedback loop (thumbs-down → ranInstead).
-    this.version(DB_VERSION).stores({
+    this.version(3).stores({
       recommendations: 'id, orgId, createdAt',
       recommendationFeedback: 'id, orgId, recommendationId, createdAt',
+    });
+
+    // Additive: effort logs including zero-catch trips (CPUE denominator).
+    this.version(DB_VERSION).stores({
+      effortLogs: 'id, tripId, orgId, closedAt, catchCount',
     });
   }
 }

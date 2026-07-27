@@ -1,7 +1,7 @@
 import { getLocalDb, type TrollDatabase } from '../db/database.js';
 import { ulid } from '../db/ulid.js';
 import { writeLocal } from '../db/write.js';
-import type { TrackPointRecord, TripRecord } from '../db/types.js';
+import type { EffortRecord, TrackPointRecord, TripRecord } from '../db/types.js';
 import {
   PERSIST_INTERVAL_MS,
   RING_BUFFER_CAPACITY,
@@ -37,6 +37,8 @@ export type ClosedTripResult = {
   trip: TripRecord;
   pointsBefore: number;
   pointsAfter: number;
+  /** Populated by session close after effort is recorded. */
+  effort?: EffortRecord;
 };
 
 /**

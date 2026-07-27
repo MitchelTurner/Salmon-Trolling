@@ -31,6 +31,7 @@ model Org {
   subscription Subscription?
   recommendations Recommendation[]
   recommendationFeedback RecommendationFeedback[]
+  effortLogs EffortLog[]
 }
 
 enum OrgKind {
@@ -171,8 +172,27 @@ model Trip {
   points   TrackPoint[]
   catches  Catch[]
   samples  ProbeSample[]
+  effort   EffortLog?
 
   @@index([orgId, startedAt])
+}
+
+/// Closed-trip effort. Zero catchCount is valid — blank trips are the CPUE denominator.
+model EffortLog {
+  id            String   @id // same as tripId
+  tripId        String   @unique
+  orgId         String
+  startedAt     DateTime
+  closedAt      DateTime
+  durationHours Float
+  catchCount    Int
+  keptCount     Int
+  createdAt     DateTime @default(now())
+
+  org  Org  @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@index([orgId, closedAt])
 }
 
 model TrackPoint {

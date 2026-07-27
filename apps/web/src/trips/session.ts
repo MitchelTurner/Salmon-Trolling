@@ -1,7 +1,8 @@
+import { useLiveBoatStore } from '../boat/live-boat-store.js';
 import { getLocalDb } from '../db/database.js';
 import { ulid } from '../db/ulid.js';
 import { writeLocal } from '../db/write.js';
-import { useLiveBoatStore } from '../boat/live-boat-store.js';
+import { recordTripEffort } from '../effort/record.js';
 import {
   createBrowserClock,
   createBrowserGeoSource,
@@ -70,9 +71,11 @@ export async function closeTripRecording() {
     throw new Error('no active trip');
   }
   const result = await activeRecorder.close();
+  // Always record effort — zero-catch trips are the CPUE denominator.
+  const { effort } = await recordTripEffort(result.trip);
   useLiveBoatStore.getState().setTrip(result.trip);
   useLiveBoatStore.getState().setLiveSample(null);
   activeRecorder.dispose();
   activeRecorder = null;
-  return result;
+  return { ...result, effort };
 }
