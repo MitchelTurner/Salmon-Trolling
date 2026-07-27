@@ -1,0 +1,24 @@
+---
+description: React PWA conventions
+globs: ["apps/web/**"]
+---
+
+# Web conventions
+
+- **Offline is the default state, not the error state.** Assume no network. Every screen
+  must render something useful from cache. Never block a screen on a fetch. Never show a
+  spinner where a stale value with a timestamp would do.
+- Local-first data: all writes go to IndexedDB (Dexie) first and enqueue a sync op.
+  The UI reads from IndexedDB only, never directly from the network.
+- The depth engine runs client-side, synchronously, on every input change. It is fast
+  enough. Do not put it behind a worker or a network call.
+- State: TanStack Query for server-derived data (with IndexedDB as the persister),
+  Zustand for live boat state (position, heading, STW, rig config). Nothing else.
+- **Glove and glare test.** Primary controls have a 56px minimum hit target. Depth
+  readouts are legible at arm's length in direct sun. No hover-only affordances.
+- Route-level code splitting. First meaningful paint on a cold cache must not require
+  the map bundle.
+- Formatting: a single `format/` module converts SI to the user's display units. No
+  ad-hoc `* 3.28084` anywhere in components.
+- Follow `docs/10-design.md` for all visual decisions. Do not introduce new colors,
+  shadows, or radii outside the token set.

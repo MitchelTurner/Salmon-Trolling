@@ -1,0 +1,46 @@
+---
+description: Domain safety rules. Wrong output here has real-world consequences. Always applied.
+alwaysApply: true
+---
+
+# Domain safety
+
+This software tells people where to put hooks in the water, and runs on a boat with no
+cell service. Wrong or overconfident output costs money, fishing time, citations, and in
+the worst case safety margin. These rules override convenience.
+
+## Confidence must be honest
+
+- Every depth result carries a `confidence` field and an `assumptions: string[]` listing
+  every `ESTIMATED` constant and every substituted input that fed it.
+- If speed through water was **estimated** from SOG and predicted current rather than
+  measured by a paddle wheel, the result must say so. This is the single largest error
+  source in the system and the user needs to know when it is in play.
+- Never widen a model outside its fitted range without flagging it. A diver curve fitted
+  to 1.5–3.0 kt returns `outOfRange: true` at 4.0 kt. Extrapolate if you must; say so.
+- Never round away uncertainty. If the 1-sigma band is ±8 ft, do not print "62 ft" alone.
+
+## Regulations are advisory
+
+- Any UI showing seasons, limits, size restrictions, or closures renders the shared
+  `<RegulatoryDisclaimer />`. No exceptions.
+- Regulatory records store `sourceUrl`, `fetchedAt`, `supersededAt`. Never display a
+  regulation without its fetch date.
+- Emergency orders change mid-season and are the whole point. If the cached regs bundle is
+  older than 24h, show a stale badge rather than hiding the age.
+- Never auto-fill or auto-submit a harvest record. The angler confirms every entry.
+
+## Community data must not burn spots
+
+- Shared catch data is aggregated, delayed at least 24h, and spatially fuzzed to a grid no
+  finer than 1 km. Raw positions are never exposed to another user.
+- A user's own tracks and spots are private by default, never opt-in by dark pattern.
+- No leaderboard ranking users by location productivity.
+
+## Safety-adjacent
+
+- Never render a route, a bar crossing, or anything readable as navigational guidance.
+  This is a fishing tool, not a chartplotter. Bathymetry is shown for structure and is
+  labelled "not for navigation".
+- Weather display always shows the issuing office and issue time. Never present a cached
+  forecast as current.

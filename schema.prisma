@@ -1,0 +1,446 @@
+// Trolling platform schema.
+// Postgres 16 + PostGIS. Geometry columns use Unsupported() — Prisma does not model
+// PostGIS types, so spatial queries go through raw SQL in a dedicated repository class.
+// Add the extension in the first migration: CREATE EXTENSION IF NOT EXISTS postgis;
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [postgis]
+}
+
+// ---------- identity ----------
+
+model Org {
+  id        String   @id // ULID, client-generatable
+  name      String
+  kind      OrgKind  @default(PERSONAL)
+  createdAt DateTime @default(now())
+
+  members    Membership[]
+  boats      Boat[]
+  trips      Trip[]
+  rigs       Rig[]
+  gear       GearItem[]
+  spots      Spot[]
+  subscription Subscription?
+}
+
+enum OrgKind {
+  PERSONAL
+  CHARTER
+  LODGE
+  DERBY
+}
+
+model User {
+  id           String       @id
+  email        String       @unique
+  displayName  String
+  createdAt    DateTime     @default(now())
+  memberships  Membership[]
+  catches      Catch[]
+  harvestRecords HarvestRecord[]
+}
+
+model Membership {
+  id     String @id
+  orgId  String
+  userId String
+  role   Role
+
+  org  Org  @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, userId])
+  @@index([userId])
+}
+
+enum Role {
+  OWNER
+  CAPTAIN
+  CREW
+  VIEWER
+}
+
+// ---------- boats and gear ----------
+
+model Boat {
+  id             String  @id
+  orgId          String
+  name           String
+  // capability flags drive DepthResult.confidence
+  hasPaddleWheel Boolean @default(false)
+  hasN2K         Boolean @default(false)
+  hasProbe       Boolean @default(false)
+
+  org    Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  trips  Trip[]
+  probes Probe[]
+  fits   CalibrationFit[]
+
+  @@index([orgId])
+}
+
+model Rig {
+  id             String   @id
+  orgId          String
+  name           String
+  delivery       Delivery
+  /// Discriminated union matching docs/01-domain-model.md. Validated by Zod at the
+  /// boundary; never read as untyped JSON in a service.
+  deliveryConfig Json
+  mainlineType   String
+  mainlineDiaM   Float
+  attractorId    String?
+  lureId         String?
+  leaderLengthM  Float
+  stackPosition  Int      @default(0)
+  updatedAt      DateTime @updatedAt
+  archivedAt     DateTime?
+
+  org       Org       @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  attractor GearItem? @relation("RigAttractor", fields: [attractorId], references: [id])
+  lure      GearItem? @relation("RigLure", fields: [lureId], references: [id])
+  fits      CalibrationFit[]
+
+  @@index([orgId])
+}
+
+enum Delivery {
+  DOWNRIGGER
+  DIVER
+  LEADCORE
+  WIRE
+  WEIGHTED
+  FLATLINE
+}
+
+model GearItem {
+  id        String   @id
+  orgId     String?  // null = shared catalog entry
+  kind      GearKind
+  brand     String?
+  model     String
+  sizeLabel String?
+  color     String?
+  finish    String?  // glow, uv, chrome, painted, natural
+  /// Measured or estimated drag at V_REF, newtons. Feeds the depth engine.
+  dragN     Float?
+  dragSource String? // MEASURED | MANUFACTURER | ESTIMATED
+  updatedAt DateTime @updatedAt
+
+  org           Org?  @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  asAttractor   Rig[] @relation("RigAttractor")
+  asLure        Rig[] @relation("RigLure")
+
+  @@index([orgId, kind])
+}
+
+enum GearKind {
+  FLASHER
+  DODGER
+  LURE
+  BAIT
+  WEIGHT
+  DIVER
+  BALL
+}
+
+// ---------- trips ----------
+
+model Trip {
+  id         String    @id
+  orgId      String
+  boatId     String?
+  startedAt  DateTime
+  closedAt   DateTime?
+  /// Snapshot of the ConditionsBundle actually used, so history is reproducible.
+  conditions Json?
+  notes      String?
+
+  org      Org          @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  boat     Boat?        @relation(fields: [boatId], references: [id])
+  points   TrackPoint[]
+  catches  Catch[]
+  samples  ProbeSample[]
+
+  @@index([orgId, startedAt])
+}
+
+model TrackPoint {
+  id       String   @id
+  tripId   String
+  t        DateTime
+  geom     Unsupported("geography(Point,4326)")
+  sogMs    Float?
+  cogRad   Float?
+  headingRad Float?
+  stwMs    Float?   // measured only; never store an estimate here
+  soundingM Float?
+  seaTempC Float?
+
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@index([tripId, t])
+}
+
+model Catch {
+  id          String   @id
+  tripId      String
+  userId      String?
+  t           DateTime
+  geom        Unsupported("geography(Point,4326)")
+  species     String
+  lengthM     Float?
+  massKg      Float?
+  kept        Boolean  @default(false)
+  /// Full snapshot of the Rig at the moment of the catch. Deliberately not a foreign
+  /// key: rigs change during a trip and a relation would silently rewrite history.
+  rigSnapshot Json
+  /// DepthResult computed at the moment of the catch, including its assumptions.
+  depthSnapshot Json
+  photoKeys   String[]
+  /// Append-only: corrections reference the record they replace.
+  supersedesId String?  @unique
+  createdAt   DateTime @default(now())
+
+  trip Trip  @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id])
+  tag  FishTag?
+
+  @@index([tripId, t])
+  @@index([species, t])
+}
+
+model Spot {
+  id        String   @id
+  orgId     String
+  name      String
+  /// Point for a mark, LineString for a troll pass.
+  geom      Unsupported("geography(Geometry,4326)")
+  isPrivate Boolean  @default(true)
+  notes     String?
+  updatedAt DateTime @updatedAt
+
+  org Org @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@index([orgId])
+}
+
+// ---------- calibration ----------
+
+model Probe {
+  id         String   @id
+  boatId     String?
+  serial     String   @unique
+  firmware   String?
+  consentAt  DateTime? // opt-in to contribute samples; null means do not use for fitting
+  lastSeenAt DateTime?
+
+  boat    Boat?         @relation(fields: [boatId], references: [id])
+  samples ProbeSample[]
+}
+
+model ProbeSample {
+  id         String   @id
+  probeId    String
+  tripId     String?
+  t          DateTime
+  depthM     Float
+  tempC      Float?
+  speedMs    Float?
+  /// Rig config in force at this moment, resolved at ingest from the trip timeline.
+  rigSnapshot Json?
+  clockOffsetMs Int   @default(0)
+
+  probe Probe @relation(fields: [probeId], references: [id], onDelete: Cascade)
+  trip  Trip? @relation(fields: [tripId], references: [id])
+
+  @@index([tripId, t])
+  @@index([probeId, t])
+}
+
+model CalibrationFit {
+  id        String   @id
+  scope     FitScope
+  boatId    String?
+  rigId     String?
+  /// Fitted coefficients keyed by constant name, overriding engine defaults.
+  params    Json
+  /// Residual standard error, metres. Becomes DepthResult.sigma for fitted results.
+  rmseM     Float
+  sampleN   Int
+  fittedAt  DateTime @default(now())
+  supersededAt DateTime?
+
+  boat Boat? @relation(fields: [boatId], references: [id])
+  rig  Rig?  @relation(fields: [rigId], references: [id])
+
+  @@index([scope, supersededAt])
+}
+
+enum FitScope {
+  GLOBAL
+  BOAT
+  RIG
+}
+
+// ---------- regulatory ----------
+
+model Regulation {
+  id           String    @id
+  regionId     String
+  kind         String    // season, bagLimit, sizeLimit, closure, emergencyOrder
+  species      String?
+  body         Json
+  sourceUrl    String
+  fetchedAt    DateTime
+  effectiveAt  DateTime?
+  supersededAt DateTime?
+  /// Scraped sources fail. A record that failed parsing is kept and flagged, never
+  /// silently replaced with a guess.
+  parseOk      Boolean   @default(true)
+
+  @@index([regionId, kind, supersededAt])
+}
+
+model HarvestRecord {
+  id          String   @id
+  userId      String
+  catchId     String?  @unique
+  species     String
+  t           DateTime
+  areaCode    String?
+  /// Always confirmed by the angler. Never auto-submitted.
+  confirmedAt DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, t])
+}
+
+// ---------- charter ----------
+
+model FishTag {
+  id        String   @id
+  catchId   String   @unique
+  code      String   @unique // printable, scannable
+  guestName String?
+  guestEmail String?
+  createdAt DateTime @default(now())
+
+  catch    Catch     @relation(fields: [catchId], references: [id], onDelete: Cascade)
+  manifest ProcessingManifest? @relation(fields: [manifestId], references: [id])
+  manifestId String?
+  shipping ShippingRecord?
+}
+
+model ProcessingManifest {
+  id          String   @id
+  orgId       String
+  processor   String
+  deliveredAt DateTime?
+  createdAt   DateTime @default(now())
+  tags        FishTag[]
+
+  @@index([orgId, createdAt])
+}
+
+model ShippingRecord {
+  id          String   @id
+  tagId       String   @unique
+  carrier     String?
+  tracking    String?
+  destination Json?
+  shippedAt   DateTime?
+
+  tag FishTag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+}
+
+// ---------- derby ----------
+
+model Derby {
+  id       String   @id
+  orgId    String
+  slug     String   @unique
+  name     String
+  startsAt DateTime
+  endsAt   DateTime
+  /// Eligible species, size rules, whether app catch logs count as entries (they
+  /// normally must not — official weigh-in only).
+  rules    Json
+
+  entries  DerbyEntry[]
+  weighIns WeighIn[]
+}
+
+model DerbyEntry {
+  id           String   @id
+  derbyId      String
+  displayName  String
+  email        String
+  stripeSessionId String? @unique
+  paidAt       DateTime?
+  waiverAt     DateTime?
+
+  derby    Derby     @relation(fields: [derbyId], references: [id], onDelete: Cascade)
+  weighIns WeighIn[]
+
+  @@index([derbyId])
+}
+
+model WeighIn {
+  id         String   @id
+  derbyId    String
+  entryId    String
+  species    String
+  massKg     Float
+  t          DateTime
+  station    String
+  operatorId String
+  witness    String?
+  photoKeys  String[]
+  voidedAt   DateTime?
+  voidReason String?
+
+  derby Derby      @relation(fields: [derbyId], references: [id], onDelete: Cascade)
+  entry DerbyEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+
+  @@index([derbyId, massKg])
+}
+
+// ---------- billing ----------
+
+model Subscription {
+  id               String   @id
+  orgId            String   @unique
+  stripeCustomerId String
+  stripeSubId      String?
+  plan             String
+  boatCount        Int      @default(1)
+  status           String
+  seasonPass       Boolean  @default(false)
+  currentPeriodEnd DateTime?
+
+  org Org @relation(fields: [orgId], references: [id], onDelete: Cascade)
+}
+
+// ---------- sync ----------
+
+model SyncOp {
+  id         String   @id // client-generated; makes /sync idempotent by construction
+  orgId      String
+  entity     String
+  opType     String   // create | update | supersede
+  payload    Json
+  clientTime DateTime
+  appliedAt  DateTime @default(now())
+
+  @@index([orgId, appliedAt])
+}

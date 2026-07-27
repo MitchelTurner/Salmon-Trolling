@@ -1,0 +1,59 @@
+---
+description: Core conventions for the trolling platform. Always applied.
+alwaysApply: true
+---
+
+# Project conventions
+
+## Stack
+
+- pnpm workspaces + Turborepo monorepo
+- `apps/api` — NestJS 10, REST, Zod validation via `nestjs-zod`
+- `apps/web` — React 18 + Vite + Tailwind, installable PWA, offline-first
+- `packages/engine` — pure TypeScript physics. **No dependencies. No I/O. No imports from
+  any other workspace package except `@troll/units`.**
+- `packages/units` — branded unit types and conversions. No dependencies.
+- `packages/shared` — Zod schemas and DTO types shared by api and web
+- `packages/db` — Prisma schema, client, migrations, seed
+- Postgres 16 + PostGIS, Redis + BullMQ, Stripe, deployed on Railway
+- Vitest everywhere. Playwright for web e2e.
+
+## Rules the agent must not break
+
+1. **Units.** Every number with a physical dimension uses a branded type from
+   `@troll/units` (`Meters`, `MetersPerSecond`, `Newtons`, `Kilograms`, `Celsius`,
+   `Radians`). Never pass a bare `number` across a function boundary if it has units.
+   Conversion to feet/knots/Fahrenheit happens in one formatting layer in `apps/web` and
+   nowhere else. A unit bug here silently produces plausible-but-wrong depths, which is
+   far worse than a crash.
+2. **No invented constants.** Physical constants live only in
+   `packages/engine/src/constants.ts`. Each carries a comment with its source and one of
+   `MEASURED` / `MANUFACTURER` / `ESTIMATED`. If a needed constant is unknown, add it as
+   `ESTIMATED` with `// TODO(calibrate)` and surface it in the engine's `assumptions`
+   output — never silently pick a number.
+3. **The engine is pure.** No `fetch`, no `Date.now()`, no randomness, no logging, no env
+   access inside `packages/engine`. Time and inputs are passed in. This is what makes it
+   testable and what makes it work at sea.
+4. **TypeScript strict.** `strict: true`, `noUncheckedIndexedAccess: true`. No `any`. No
+   non-null assertions outside tests.
+5. **Validate at boundaries.** Every HTTP body, every external API response, and every
+   record read out of IndexedDB is parsed through Zod before use. Marine APIs return
+   malformed and partial data routinely; treat all of it as hostile.
+6. **No new dependencies without asking.** State the package, the reason, and its size.
+7. **Errors are typed.** Discriminated result unions in the engine and in sync code.
+   Exceptions are for genuinely exceptional conditions, not expected failure modes like
+   "no forecast cached for this region".
+
+## Testing
+
+- `packages/engine` requires golden tests for every model. Any change to engine output
+  updates golden files in the same commit with a comment explaining why the physics
+  changed.
+- Coverage floor for `packages/engine` is 95%. Elsewhere, use judgement.
+- Do not mock the engine in web tests. It is pure and fast; run the real thing.
+
+## Commits and scope
+
+- One task from `TASKS.md` per commit. No opportunistic refactoring of adjacent code.
+- If a task requires changing a doc in `docs/`, stop and say so rather than silently
+  diverging from the spec.

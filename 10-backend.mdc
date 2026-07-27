@@ -1,0 +1,25 @@
+---
+description: NestJS API conventions
+globs: ["apps/api/**", "packages/db/**"]
+---
+
+# Backend conventions
+
+- Feature modules, not layer modules: `trips/`, `rigs/`, `conditions/`, `calibration/`,
+  `charter/`, `billing/`. Each owns its controller, service, DTOs, and tests.
+- Controllers do routing and validation only. All logic in services. No Prisma calls in
+  controllers.
+- Every external API integration lives in `apps/api/src/integrations/<source>/` behind an
+  interface, with a recorded-fixture test. Never call an external API from a service
+  directly.
+- BullMQ queues: `bundles` (region prefetch generation), `ingest` (external data pulls),
+  `calibration` (probe fit jobs), `notify`. Queue names are constants in
+  `apps/api/src/queues/names.ts`. Every job is idempotent and safe to retry.
+- Cache external data in Redis with an explicit TTL matched to the source's real update
+  cadence (see `docs/04-data-sources.md`). Never cache indefinitely, never re-fetch a
+  static tide table hourly.
+- Rate-limit every outbound integration. NOAA and ADF&G endpoints are public goods; be a
+  good citizen and back off on 429/5xx with jitter.
+- Auth: JWT access + refresh, org-scoped. Every query that touches user data goes through
+  a scoping helper — never trust a client-supplied `orgId` or `userId`.
+- Money is integer cents. Stripe webhooks are verified and idempotent by event id.
