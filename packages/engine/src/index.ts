@@ -26,6 +26,18 @@ export {
 } from './constants.js';
 
 export {
+  DEEP_SIX_MEDIUM_SETTING_2,
+  DIVER_CHARTS,
+  evaluateDiverFit,
+  findDiverChart,
+  fitDiverPowerLaw,
+  isDiverOutOfRange,
+  type DiverChart,
+  type DiverChartPoint,
+  type DiverFitParams,
+} from './data/divers.js';
+
+export {
   downriggerInputs,
   frontalArea,
   kgPerM,
@@ -50,3 +62,33 @@ export {
   type SolveLeaderInput,
   type SolveLeaderResult,
 } from './models/leader.js';
+
+export { solveDiver, type SolveDiverInput, type SolveDiverResult } from './models/diver.js';
+
+export {
+  LEADCORE_DEFAULT_PARAMS,
+  solveLeadcore,
+  solveWire,
+  type LeadcoreParams,
+  type SolveLeadcoreInput,
+  type SolveLeadcoreResult,
+  type SolveWireInput,
+} from './models/leadcore.js';
+
+export {
+  solveFlatline,
+  solveWeighted,
+  type SolveFlatlineInput,
+  type SolveWeightedInput,
+  type SolveWeightedResult,
+  type WeightedLine,
+  type WeightedTip,
+} from './models/weighted.js';
+
+export {
+  integrateTowedCable,
+  type TowedCableIntegrationInput,
+  type TowedCableIntegrationResult,
+} from './models/towed-cable.js';
+
+export { V_REF } from './models/v-ref.js';
