@@ -19,3 +19,13 @@ export {
   type ServerSyncOp,
   type SyncResponse,
 } from './sync.js';
+
+export {
+  REGION_IDS,
+  REGIONS,
+  DEFAULT_REGION_ID,
+  getRegion,
+  type RegionId,
+  type Region,
+  type RegionStations,
+} from './regions.js';
