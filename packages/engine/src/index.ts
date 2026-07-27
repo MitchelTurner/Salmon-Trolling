@@ -39,3 +39,14 @@ export {
   type SolveDownriggerResult,
   type SquareMeters,
 } from './models/downrigger.js';
+
+export {
+  kgPerM as leaderKgPerM,
+  lurePositionFromBall,
+  solveLeader,
+  type LeaderLine,
+  type LurePosition,
+  type LurePositionInput,
+  type SolveLeaderInput,
+  type SolveLeaderResult,
+} from './models/leader.js';
