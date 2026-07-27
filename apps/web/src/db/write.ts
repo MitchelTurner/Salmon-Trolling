@@ -16,6 +16,7 @@ const ENTITY_BY_TABLE: Record<Exclude<DomainTableName, 'syncQueue'>, string> = {
   trips: 'Trip',
   trackPoints: 'TrackPoint',
   catches: 'Catch',
+  photos: 'Photo',
   spots: 'Spot',
   probes: 'Probe',
   probeSamples: 'ProbeSample',

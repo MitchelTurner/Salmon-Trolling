@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useLiveBoatStore } from '../../boat/live-boat-store.js';
 import { AssumptionsPanel } from './AssumptionsPanel.js';
 import { DepthColumn } from './DepthColumn.js';
 import { RigBuilder } from './RigBuilder.js';
@@ -8,7 +9,12 @@ import { useCalculator } from './useCalculator.js';
 
 export function CalculatorPage() {
   const [inputs, setInputs] = useState<CalculatorInputs>(DEFAULT_INPUTS);
+  const setActiveRig = useLiveBoatStore((s) => s.setActiveRig);
   const result = useCalculator(inputs);
+
+  useEffect(() => {
+    setActiveRig(inputs);
+  }, [inputs, setActiveRig]);
 
   return (
     <div className="mx-auto flex min-h-screen max-w-5xl flex-col bg-deep text-hairline">

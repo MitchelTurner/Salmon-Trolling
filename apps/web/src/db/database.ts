@@ -8,6 +8,7 @@ import type {
   HarvestRecordRow,
   MembershipRecord,
   OrgRecord,
+  PhotoRecord,
   ProbeRecord,
   ProbeSampleRecord,
   RegulationRecord,
@@ -20,7 +21,7 @@ import type {
 } from './types.js';
 
 export const DB_NAME = 'troll';
-export const DB_VERSION = 1;
+export const DB_VERSION = 2;
 
 /**
  * Local-first store. UI reads only from here; network never feeds screens
@@ -36,6 +37,7 @@ export class TrollDatabase extends Dexie {
   trips!: EntityTable<TripRecord, 'id'>;
   trackPoints!: EntityTable<TrackPointRecord, 'id'>;
   catches!: EntityTable<CatchRecord, 'id'>;
+  photos!: EntityTable<PhotoRecord, 'id'>;
   spots!: EntityTable<SpotRecord, 'id'>;
   probes!: EntityTable<ProbeRecord, 'id'>;
   probeSamples!: EntityTable<ProbeSampleRecord, 'id'>;
@@ -48,7 +50,7 @@ export class TrollDatabase extends Dexie {
   constructor(name = DB_NAME) {
     super(name);
 
-    this.version(DB_VERSION).stores({
+    this.version(1).stores({
       orgs: 'id, kind, createdAt',
       users: 'id, email, createdAt',
       memberships: 'id, orgId, userId, [orgId+userId]',
@@ -66,6 +68,11 @@ export class TrollDatabase extends Dexie {
       harvestRecords: 'id, userId, catchId, t, confirmedAt, [userId+t]',
       bundles: 'id, regionId, startIso, expiresAt, generatedAt',
       syncQueue: 'id, orgId, entity, clientTime, attempts',
+    });
+
+    // Additive: catch photo blobs. Migrations must not drop unrecognized fields.
+    this.version(DB_VERSION).stores({
+      photos: 'id, tripId, catchId, createdAt',
     });
   }
 }
@@ -105,6 +112,7 @@ export type DomainTable = Table<
   | TripRecord
   | TrackPointRecord
   | CatchRecord
+  | PhotoRecord
   | SpotRecord
   | ProbeRecord
   | ProbeSampleRecord

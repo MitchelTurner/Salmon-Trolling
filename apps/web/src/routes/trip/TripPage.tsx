@@ -6,6 +6,7 @@ import {
   closeTripRecording,
   startTripRecording,
 } from '../../trips/session.js';
+import { CatchLogForm } from './CatchLogForm.js';
 
 export function TripPage() {
   const trip = useLiveBoatStore((s) => s.trip);
@@ -120,6 +121,8 @@ export function TripPage() {
         {closeSummary && (
           <p className="font-ui text-sm text-hairline/80">{closeSummary}</p>
         )}
+
+        {openTrip && <CatchLogForm tripId={trip.id} />}
 
         <div className="mt-auto flex flex-col gap-2">
           {!openTrip ? (

@@ -127,11 +127,26 @@ export type CatchRecord = {
   lengthM?: number;
   massKg?: number;
   kept: boolean;
+  /** Full rig config at the catch moment — not a foreign key. */
   rigSnapshot: Record<string, unknown>;
+  /** DepthResult (and assumptions) at the catch moment. */
   depthSnapshot: Record<string, unknown>;
   photoKeys: string[];
+  /** Append-only correction: points at the catch this event replaces. */
   supersedesId?: string;
   createdAt: string;
+};
+
+/** Local photo bytes. Sync carries `photoKeys` on the Catch; upload comes later. */
+export type PhotoRecord = {
+  id: string;
+  tripId: string;
+  catchId?: string;
+  mimeType: string;
+  byteLength: number;
+  createdAt: string;
+  /** Raw image bytes — Uint8Array survives IndexedDB better than Blob. */
+  bytes: Uint8Array;
 };
 
 export type SpotRecord = {
@@ -239,6 +254,7 @@ export type DomainTableName =
   | 'trips'
   | 'trackPoints'
   | 'catches'
+  | 'photos'
   | 'spots'
   | 'probes'
   | 'probeSamples'

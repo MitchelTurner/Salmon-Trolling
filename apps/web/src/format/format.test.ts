@@ -2,9 +2,11 @@ import { describe, expect, it } from 'vitest';
 import {
   feetToMeters,
   formatLength,
+  formatMass,
   formatSpeed,
   metersToFeet,
   parseLengthInput,
+  parseMassInput,
   parseSpeedInput,
   soundingParts,
 } from './index.js';
@@ -23,7 +25,14 @@ describe('format', () => {
 
   it('parses length inputs in display units', () => {
     expect(parseLengthInput('100')).toBeCloseTo(30.48, 9);
-    expect(parseLengthInput('10', { length: 'm', speed: 'kt' })).toBe(10);
+    expect(parseLengthInput('10', { length: 'm', speed: 'kt', mass: 'lb' })).toBe(
+      10,
+    );
+  });
+
+  it('converts mass at the avoirdupois pound', () => {
+    expect(parseMassInput('1')).toBeCloseTo(0.45359237, 9);
+    expect(formatMass(0.45359237)).toBe('1.0 lb');
   });
 
   it('splits soundings into integer and tenths', () => {

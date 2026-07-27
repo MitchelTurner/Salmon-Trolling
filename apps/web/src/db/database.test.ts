@@ -34,6 +34,7 @@ describe('TrollDatabase', () => {
       'trips',
       'trackPoints',
       'catches',
+      'photos',
       'spots',
       'probes',
       'probeSamples',

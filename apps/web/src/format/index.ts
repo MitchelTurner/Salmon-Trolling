@@ -3,8 +3,10 @@
  * No ad-hoc unit math in components.
  */
 import {
+  KILOGRAMS_PER_POUND,
   METERS_PER_FOOT,
   METERS_PER_SECOND_PER_KNOT,
+  type Kilograms,
   type Meters,
   type MetersPerSecond,
   type Newtons,
@@ -14,11 +16,13 @@ import {
 export type DisplayUnits = {
   readonly length: 'ft' | 'm';
   readonly speed: 'kt' | 'm/s';
+  readonly mass: 'lb' | 'kg';
 };
 
 export const DEFAULT_DISPLAY_UNITS: DisplayUnits = {
   length: 'ft',
   speed: 'kt',
+  mass: 'lb',
 };
 
 export function metersToFeet(m: number): number {
@@ -61,6 +65,42 @@ export function formatSpeed(
 
 export function formatForce(value: Newtons | number, digits = 1): string {
   return `${Number(value).toFixed(digits)} N`;
+}
+
+export function kgToPounds(kg: number): number {
+  return kg / KILOGRAMS_PER_POUND;
+}
+
+export function poundsToKg(lb: number): number {
+  return lb * KILOGRAMS_PER_POUND;
+}
+
+export function formatMass(
+  value: Kilograms | number,
+  units: DisplayUnits = DEFAULT_DISPLAY_UNITS,
+  digits = 1,
+): string {
+  if (units.mass === 'lb') {
+    return `${kgToPounds(value).toFixed(digits)} lb`;
+  }
+  return `${Number(value).toFixed(digits)} kg`;
+}
+
+export function parseMassInput(
+  raw: string,
+  units: DisplayUnits = DEFAULT_DISPLAY_UNITS,
+): number {
+  const n = Number(raw);
+  if (!Number.isFinite(n)) return 0;
+  return units.mass === 'lb' ? poundsToKg(n) : n;
+}
+
+export function massInputValue(
+  kgValue: number,
+  units: DisplayUnits = DEFAULT_DISPLAY_UNITS,
+): string {
+  const v = units.mass === 'lb' ? kgToPounds(kgValue) : kgValue;
+  return String(Math.round(v * 10) / 10);
 }
 
 export function formatAngleDeg(value: Radians | number, digits = 0): string {
