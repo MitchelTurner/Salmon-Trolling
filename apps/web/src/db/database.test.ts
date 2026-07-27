@@ -42,6 +42,8 @@ describe('TrollDatabase', () => {
       'regulations',
       'harvestRecords',
       'bundles',
+      'recommendations',
+      'recommendationFeedback',
       'syncQueue',
     ];
 

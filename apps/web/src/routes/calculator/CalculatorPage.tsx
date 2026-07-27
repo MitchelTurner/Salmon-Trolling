@@ -27,12 +27,20 @@ export function CalculatorPage() {
             Offline · no account · engine runs on this device
           </p>
         </div>
-        <Link
-          to="/trip"
-          className="flex min-h-hit min-w-hit items-center justify-center font-ui text-xs underline"
-        >
-          Trip
-        </Link>
+        <nav className="flex items-center gap-3">
+          <Link
+            to="/recommend"
+            className="flex min-h-hit min-w-hit items-center justify-center font-ui text-xs underline"
+          >
+            Recommend
+          </Link>
+          <Link
+            to="/trip"
+            className="flex min-h-hit min-w-hit items-center justify-center font-ui text-xs underline"
+          >
+            Trip
+          </Link>
+        </nav>
       </header>
 
       <div className="flex min-h-0 flex-1">

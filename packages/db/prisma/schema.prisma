@@ -29,6 +29,8 @@ model Org {
   gear       GearItem[]
   spots      Spot[]
   subscription Subscription?
+  recommendations Recommendation[]
+  recommendationFeedback RecommendationFeedback[]
 }
 
 enum OrgKind {
@@ -413,6 +415,38 @@ model WeighIn {
   entry DerbyEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
 
   @@index([derbyId, massKg])
+}
+
+// ---------- recommendations ----------
+
+model Recommendation {
+  id              String   @id // ULID, client- or server-generatable
+  orgId           String
+  context         Json
+  payload         Json // Recommendation output (reasons, bands, score, basis)
+  rulesetVersion  Int?
+  createdAt       DateTime @default(now())
+
+  org      Org                       @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  feedback RecommendationFeedback[]
+
+  @@index([orgId, createdAt])
+}
+
+/// Thumbs-down only. The sole question is "what did you run instead?"
+model RecommendationFeedback {
+  id               String   @id
+  orgId            String
+  recommendationId String
+  thumbs           String   // always "down"
+  ranInstead       String
+  createdAt        DateTime @default(now())
+
+  org            Org            @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  recommendation Recommendation @relation(fields: [recommendationId], references: [id], onDelete: Cascade)
+
+  @@unique([recommendationId])
+  @@index([orgId, createdAt])
 }
 
 // ---------- billing ----------

@@ -244,6 +244,26 @@ export type SyncQueueRecord = {
   attempts: number;
 };
 
+/** Local recommendation issued for on-deck feedback. */
+export type RecommendationRecord = {
+  id: string;
+  orgId: string;
+  context: Record<string, unknown>;
+  payload: Record<string, unknown>;
+  rulesetVersion?: number;
+  createdAt: string;
+};
+
+/** Thumbs-down only — answer to "what did you run instead?" */
+export type RecommendationFeedbackRecord = {
+  id: string;
+  orgId: string;
+  recommendationId: string;
+  thumbs: 'down';
+  ranInstead: string;
+  createdAt: string;
+};
+
 export type DomainTableName =
   | 'orgs'
   | 'users'
@@ -262,4 +282,6 @@ export type DomainTableName =
   | 'regulations'
   | 'harvestRecords'
   | 'bundles'
+  | 'recommendations'
+  | 'recommendationFeedback'
   | 'syncQueue';

@@ -48,3 +48,13 @@ export {
   type BundlePayloadBody,
   type ConditionsBundle,
 } from './bundle.js';
+
+export {
+  FEEDBACK_QUESTION,
+  CreateRecommendationsBodySchema,
+  RecommendationFeedbackBodySchema,
+  RuleContextBodySchema,
+  type CreateRecommendationsBody,
+  type RecommendationFeedbackBody,
+  type RuleContextBody,
+} from './recommendation.js';

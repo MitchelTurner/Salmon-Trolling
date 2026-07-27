@@ -11,6 +11,8 @@ import type {
   PhotoRecord,
   ProbeRecord,
   ProbeSampleRecord,
+  RecommendationFeedbackRecord,
+  RecommendationRecord,
   RegulationRecord,
   RigRecord,
   SpotRecord,
@@ -21,7 +23,7 @@ import type {
 } from './types.js';
 
 export const DB_NAME = 'troll';
-export const DB_VERSION = 2;
+export const DB_VERSION = 3;
 
 /**
  * Local-first store. UI reads only from here; network never feeds screens
@@ -45,6 +47,8 @@ export class TrollDatabase extends Dexie {
   regulations!: EntityTable<RegulationRecord, 'id'>;
   harvestRecords!: EntityTable<HarvestRecordRow, 'id'>;
   bundles!: EntityTable<BundleRecord, 'id'>;
+  recommendations!: EntityTable<RecommendationRecord, 'id'>;
+  recommendationFeedback!: EntityTable<RecommendationFeedbackRecord, 'id'>;
   syncQueue!: EntityTable<SyncQueueRecord, 'id'>;
 
   constructor(name = DB_NAME) {
@@ -71,8 +75,14 @@ export class TrollDatabase extends Dexie {
     });
 
     // Additive: catch photo blobs. Migrations must not drop unrecognized fields.
-    this.version(DB_VERSION).stores({
+    this.version(2).stores({
       photos: 'id, tripId, catchId, createdAt',
+    });
+
+    // Additive: recommendation feedback loop (thumbs-down → ranInstead).
+    this.version(DB_VERSION).stores({
+      recommendations: 'id, orgId, createdAt',
+      recommendationFeedback: 'id, orgId, recommendationId, createdAt',
     });
   }
 }

@@ -6,6 +6,7 @@ import { BillingModule } from './billing/billing.module.js';
 import { BundlesModule } from './bundles/bundles.module.js';
 import { CalcModule } from './calc/calc.module.js';
 import { ProblemFilter } from './calc/problem.filter.js';
+import { RecommendationsModule } from './recommendations/recommendations.module.js';
 import { SyncModule } from './sync/sync.module.js';
 
 @Module({
@@ -21,6 +22,7 @@ import { SyncModule } from './sync/sync.module.js';
     SyncModule,
     BundlesModule,
     BillingModule,
+    RecommendationsModule,
   ],
   providers: [
     {
