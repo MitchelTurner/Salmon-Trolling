@@ -16,7 +16,9 @@ export type RegionStations = {
   readonly nwsMarineZone: string;
   /** NWS product location / CWA for Coastal Waters Forecast (CWF). */
   readonly nwsCwfLocation: string;
-}
+  /** Primary NDBC buoy (sparse SE AK coverage). */
+  readonly ndbcBuoy: string;
+};
 
 export type Region = {
   readonly id: RegionId;
@@ -46,6 +48,8 @@ export const REGIONS: Readonly<Record<RegionId, Region>> = {
       /** Clarence Strait — covers Ketchikan approach waters. */
       nwsMarineZone: 'PKZ036',
       nwsCwfLocation: 'AJK',
+      /** Central Dixon Entrance — nearest wave buoy with useful coverage. */
+      ndbcBuoy: '46145',
     },
   },
 };
