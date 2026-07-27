@@ -196,3 +196,26 @@ export {
   type CatchPerHourResult,
   type EffortSample,
 } from './effort/index.js';
+
+export {
+  FEATURE_NAMES,
+  MIN_TRIPS_FOR_USER_FIT,
+  MIN_USERS_FOR_POOLED_FIT,
+  canFitPooled,
+  canFitUser,
+  featuresFromContext,
+  fitPerUser,
+  fitPooledWithUserOffset,
+  predictGbt,
+  predictPersonal,
+  trainGbt,
+  type FeatureName,
+  type FeatureVector,
+  type FitGateFailure,
+  type FitRow,
+  type GradientBoostedModel,
+  type PooledFitSuccess,
+  type Stump,
+  type TrainGbtOptions,
+  type UserFitSuccess,
+} from './fit/index.js';
