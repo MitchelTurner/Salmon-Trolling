@@ -76,12 +76,20 @@ export function TripPage() {
             Offline recording · screen-off flush enabled
           </p>
         </div>
-        <Link
-          to="/calculator"
-          className="flex min-h-hit min-w-hit items-center justify-center font-ui text-sm underline"
-        >
-          Calculator
-        </Link>
+        <div className="flex gap-3">
+          <Link
+            to="/dock"
+            className="flex min-h-hit min-w-hit items-center justify-center font-ui text-sm underline"
+          >
+            Dock
+          </Link>
+          <Link
+            to="/calculator"
+            className="flex min-h-hit min-w-hit items-center justify-center font-ui text-sm underline"
+          >
+            Calculator
+          </Link>
+        </div>
       </header>
 
       <main className="flex flex-1 flex-col gap-4 p-4">
