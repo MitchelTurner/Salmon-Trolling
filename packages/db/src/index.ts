@@ -1,3 +1,14 @@
-/** Prisma schema, client, migrations, and seed. Implemented in task 0.3. */
+export {
+  PrismaClient,
+  createPrismaClient,
+  getPrismaClient,
+  type Prisma,
+} from './client.js';
 
-export const PACKAGE_NAME = '@troll/db' as const;
+export {
+  Delivery,
+  FitScope,
+  GearKind,
+  OrgKind,
+  Role,
+} from '@prisma/client';

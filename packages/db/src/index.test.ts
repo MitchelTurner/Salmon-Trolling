@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { PACKAGE_NAME } from './index.js';
+import { Delivery, GearKind, OrgKind, Role } from './index.js';
 
 describe('@troll/db', () => {
-  it('is scaffolded', () => {
-    expect(PACKAGE_NAME).toBe('@troll/db');
+  it('re-exports schema enums used by the seed', () => {
+    expect(OrgKind.PERSONAL).toBe('PERSONAL');
+    expect(Role.OWNER).toBe('OWNER');
+    expect(Delivery.DOWNRIGGER).toBe('DOWNRIGGER');
+    expect(GearKind.FLASHER).toBe('FLASHER');
   });
 });
