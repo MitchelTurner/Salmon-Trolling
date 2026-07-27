@@ -17,6 +17,13 @@ function apiBase(): string | null {
   return base ? base.replace(/\/$/, '') : null;
 }
 
+/** Station operators act in the derby org (env override for dock devices). */
+async function stationOrgId(): Promise<string> {
+  const fromEnv = import.meta.env.VITE_ORG_ID as string | undefined;
+  if (fromEnv?.trim()) return fromEnv.trim();
+  return ensurePersonalOrg();
+}
+
 /** Offline-capable dock weigh-in station for a derby. */
 export function WeighInStationPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -53,7 +60,7 @@ export function WeighInStationPage() {
     setBusy(true);
     setError(null);
     try {
-      const orgId = await ensurePersonalOrg();
+      const orgId = await stationOrgId();
       const userId = await ensurePersonalUser();
       const n = await prefetchDerbyTickets({
         orgId,
@@ -86,7 +93,7 @@ export function WeighInStationPage() {
     setError(null);
     setStatus(null);
     try {
-      const orgId = await ensurePersonalOrg();
+      const orgId = await stationOrgId();
       const userId = await ensurePersonalUser();
       const massKg = parseMassInput(massLb);
       if (!(massKg > 0)) throw new Error('Enter a weight');
