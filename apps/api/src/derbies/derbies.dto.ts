@@ -1,7 +1,10 @@
 import {
   CompleteDerbyRegistrationBodySchema,
   CreateWeighInBodySchema,
+  OpenDisputeBodySchema,
   RegisterDerbyBodySchema,
+  ResolveDisputeBodySchema,
+  VoidWeighInBodySchema,
 } from '@troll/shared';
 import { createZodDto } from 'nestjs-zod';
 
@@ -12,3 +15,9 @@ export class CompleteDerbyRegistrationDto extends createZodDto(
 ) {}
 
 export class CreateWeighInDto extends createZodDto(CreateWeighInBodySchema) {}
+
+export class VoidWeighInDto extends createZodDto(VoidWeighInBodySchema) {}
+
+export class OpenDisputeDto extends createZodDto(OpenDisputeBodySchema) {}
+
+export class ResolveDisputeDto extends createZodDto(ResolveDisputeBodySchema) {}

@@ -1,13 +1,21 @@
 import { Inject, Injectable } from '@nestjs/common';
 import {
+  canResolveDerbyDispute,
   mintDerbyTicketCode,
   rankLeaderboard,
   type CompleteDerbyRegistrationBody,
   type CreateWeighInBody,
+  type DerbyAuditAction,
+  type DerbyAuditEvent,
+  type DerbyDispute,
   type DerbyRegistrationReceipt,
   type DerbyTicketRosterItem,
+  type OpenDisputeBody,
   type PublicLeaderboard,
   type RegisterDerbyBody,
+  type ResolveDisputeBody,
+  type Role,
+  type VoidWeighInBody,
   type WeighInRecord,
 } from '@troll/shared';
 import { randomUUID } from 'node:crypto';
@@ -132,6 +140,14 @@ export class DerbiesService {
       waiverSignatureData: body.waiver.signatureData,
     };
     await this.store.putEntry(entry);
+    await this.audit({
+      derbyId: derby.id,
+      action: 'REGISTRATION_STARTED',
+      actorId: entry.id,
+      entryId: entry.id,
+      detail: `Registration started for ${entry.displayName}`,
+      meta: { waiverAt },
+    });
     return toReceipt(derby.slug, entry);
   }
 
@@ -163,6 +179,14 @@ export class DerbiesService {
       ticketCode,
     };
     await this.store.putEntry(next);
+    await this.audit({
+      derbyId: derby.id,
+      action: 'TICKET_ISSUED',
+      actorId: 'stripe',
+      entryId: next.id,
+      detail: `Ticket ${ticketCode} issued`,
+      meta: { ticketCode },
+    });
     return toReceipt(derby.slug, next);
   }
 
@@ -242,7 +266,214 @@ export class DerbiesService {
       photoKeys: body.photoKeys ?? [],
     };
     await this.store.putWeighIn(weighIn);
+    await this.audit({
+      derbyId: derby.id,
+      action: 'WEIGH_IN_RECORDED',
+      actorId: operatorId,
+      weighInId: weighIn.id,
+      entryId: entry.id,
+      detail: `Weigh-in ${weighIn.massKg} kg ${weighIn.species} at ${weighIn.station}`,
+      meta: {
+        massKg: weighIn.massKg,
+        species: weighIn.species,
+        station: weighIn.station,
+        witness: weighIn.witness,
+        photoCount: weighIn.photoKeys.length,
+        ticketCode: entry.ticketCode,
+      },
+    });
     return this.toWeighInRecord(weighIn);
+  }
+
+  /** Void a weigh-in (scale error, rule breach). Append-only audit. */
+  async voidWeighIn(
+    slug: string,
+    orgId: string,
+    actorId: string,
+    weighInId: string,
+    body: VoidWeighInBody,
+  ): Promise<WeighInRecord> {
+    const derby = await this.requireOrgDerby(slug, orgId);
+    if (!derby) throw new Error('derby not found');
+
+    const weighIn = await this.store.getWeighIn(weighInId);
+    if (!weighIn || weighIn.derbyId !== derby.id) {
+      throw new Error('weigh-in not found');
+    }
+    if (weighIn.voidedAt) {
+      return this.toWeighInRecord(weighIn);
+    }
+
+    const next: StoredWeighIn = {
+      ...weighIn,
+      voidedAt: new Date().toISOString(),
+      voidReason: body.reason.trim(),
+    };
+    await this.store.putWeighIn(next);
+    await this.audit({
+      derbyId: derby.id,
+      action: 'WEIGH_IN_VOIDED',
+      actorId,
+      weighInId: next.id,
+      entryId: next.entryId,
+      detail: `Weigh-in voided: ${body.reason.trim()}`,
+      meta: { reason: body.reason.trim(), massKg: next.massKg },
+    });
+    return this.toWeighInRecord(next);
+  }
+
+  async openDispute(
+    slug: string,
+    orgId: string,
+    actorId: string,
+    body: OpenDisputeBody,
+  ): Promise<DerbyDispute> {
+    const derby = await this.requireOrgDerby(slug, orgId);
+    if (!derby) throw new Error('derby not found');
+
+    const weighIn = await this.store.getWeighIn(body.weighInId);
+    if (!weighIn || weighIn.derbyId !== derby.id) {
+      throw new Error('weigh-in not found');
+    }
+
+    const open = await this.store.listOpenDisputesForWeighIn(weighIn.id);
+    if (open[0]) return open[0];
+
+    const dispute: DerbyDispute = {
+      id: newId('disp'),
+      derbyId: derby.id,
+      weighInId: weighIn.id,
+      status: 'open',
+      reason: body.reason.trim(),
+      openedBy: actorId,
+      openedAt: new Date().toISOString(),
+    };
+    await this.store.putDispute(dispute);
+    await this.audit({
+      derbyId: derby.id,
+      action: 'DISPUTE_OPENED',
+      actorId,
+      weighInId: weighIn.id,
+      entryId: weighIn.entryId,
+      disputeId: dispute.id,
+      detail: `Dispute opened: ${dispute.reason}`,
+      meta: { reason: dispute.reason },
+    });
+    return dispute;
+  }
+
+  async resolveDispute(
+    slug: string,
+    orgId: string,
+    actorId: string,
+    role: Role,
+    disputeId: string,
+    body: ResolveDisputeBody,
+  ): Promise<DerbyDispute> {
+    if (!canResolveDerbyDispute(role)) {
+      throw new Error('role cannot resolve disputes');
+    }
+
+    const derby = await this.requireOrgDerby(slug, orgId);
+    if (!derby) throw new Error('derby not found');
+
+    const dispute = await this.store.getDispute(disputeId);
+    if (!dispute || dispute.derbyId !== derby.id) {
+      throw new Error('dispute not found');
+    }
+    if (dispute.status === 'resolved') return dispute;
+
+    const resolvedAt = new Date().toISOString();
+    const next: DerbyDispute = {
+      ...dispute,
+      status: 'resolved',
+      resolution: body.resolution,
+      resolvedBy: actorId,
+      resolvedAt,
+      notes: body.notes.trim(),
+    };
+    await this.store.putDispute(next);
+
+    if (body.resolution === 'overturn') {
+      const weighIn = await this.store.getWeighIn(dispute.weighInId);
+      if (weighIn && !weighIn.voidedAt) {
+        await this.store.putWeighIn({
+          ...weighIn,
+          voidedAt: resolvedAt,
+          voidReason: `dispute overturned: ${body.notes.trim()}`,
+        });
+        await this.audit({
+          derbyId: derby.id,
+          action: 'WEIGH_IN_VOIDED',
+          actorId,
+          weighInId: weighIn.id,
+          entryId: weighIn.entryId,
+          disputeId: dispute.id,
+          detail: `Weigh-in voided by dispute overturn: ${body.notes.trim()}`,
+          meta: {
+            reason: body.notes.trim(),
+            via: 'dispute_overturn',
+          },
+        });
+      }
+    }
+
+    await this.audit({
+      derbyId: derby.id,
+      action: 'DISPUTE_RESOLVED',
+      actorId,
+      weighInId: dispute.weighInId,
+      disputeId: dispute.id,
+      detail: `Dispute ${body.resolution}: ${body.notes.trim()}`,
+      meta: {
+        resolution: body.resolution,
+        notes: body.notes.trim(),
+      },
+    });
+    return next;
+  }
+
+  async listAudit(
+    slug: string,
+    orgId: string,
+  ): Promise<DerbyAuditEvent[] | null> {
+    const derby = await this.requireOrgDerby(slug, orgId);
+    if (!derby) return null;
+    return this.store.listAudit(derby.id);
+  }
+
+  async listDisputes(
+    slug: string,
+    orgId: string,
+  ): Promise<DerbyDispute[] | null> {
+    const derby = await this.requireOrgDerby(slug, orgId);
+    if (!derby) return null;
+    return this.store.listDisputes(derby.id);
+  }
+
+  private async audit(input: {
+    derbyId: string;
+    action: DerbyAuditAction;
+    actorId: string;
+    detail: string;
+    meta?: Record<string, unknown>;
+    weighInId?: string;
+    entryId?: string;
+    disputeId?: string;
+  }): Promise<void> {
+    const event: DerbyAuditEvent = {
+      id: newId('aud'),
+      derbyId: input.derbyId,
+      action: input.action,
+      actorId: input.actorId,
+      at: new Date().toISOString(),
+      weighInId: input.weighInId,
+      entryId: input.entryId,
+      disputeId: input.disputeId,
+      detail: input.detail,
+      meta: input.meta ?? {},
+    };
+    await this.store.appendAudit(event);
   }
 
   private async requireOrgDerby(slug: string, orgId: string) {

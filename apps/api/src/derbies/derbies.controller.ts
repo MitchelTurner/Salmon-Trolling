@@ -15,7 +15,10 @@ import { RequirePermission } from '../auth/require-permission.js';
 import {
   CompleteDerbyRegistrationDto,
   CreateWeighInDto,
+  OpenDisputeDto,
   RegisterDerbyDto,
+  ResolveDisputeDto,
+  VoidWeighInDto,
 } from './derbies.dto.js';
 import { DerbiesService } from './derbies.service.js';
 
@@ -50,19 +53,7 @@ export class DerbiesController {
         registration: receipt,
       };
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'register failed';
-      if (message.includes('not found')) {
-        throw new NotFoundException({
-          type: 'https://troll.app/problems/derby-not-found',
-          title: 'Derby not found',
-          detail: message,
-        });
-      }
-      throw new BadRequestException({
-        type: 'https://troll.app/problems/derby-register',
-        title: 'Registration failed',
-        detail: message,
-      });
+      return this.mapError(err, 'register');
     }
   }
 
@@ -82,19 +73,7 @@ export class DerbiesController {
         registration: receipt,
       };
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'complete failed';
-      if (message.includes('not found')) {
-        throw new NotFoundException({
-          type: 'https://troll.app/problems/derby-registration-not-found',
-          title: 'Registration not found',
-          detail: message,
-        });
-      }
-      throw new BadRequestException({
-        type: 'https://troll.app/problems/derby-register-complete',
-        title: 'Could not complete registration',
-        detail: message,
-      });
+      return this.mapError(err, 'register-complete');
     }
   }
 
@@ -118,15 +97,48 @@ export class DerbiesController {
       }
       return { generatedAt: new Date().toISOString(), tickets };
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'tickets failed';
-      if (message.includes('not in this org')) {
-        throw new ForbiddenException({
-          type: 'https://troll.app/problems/forbidden',
-          title: 'Forbidden',
-          detail: message,
+      return this.mapError(err, 'tickets');
+    }
+  }
+
+  /** GET /derbies/:slug/audit — append-only trail for prize disputes. */
+  @Get(':slug/audit')
+  @UseGuards(OrgAuthGuard, RequirePermission('derby:dispute'))
+  async audit(@Req() req: AuthedRequest, @Param('slug') slug: string) {
+    try {
+      const events = await this.derbies.listAudit(slug, req.orgContext!.orgId);
+      if (!events) {
+        throw new NotFoundException({
+          type: 'https://troll.app/problems/derby-not-found',
+          title: 'Derby not found',
+          detail: `No derby for slug "${slug}"`,
         });
       }
-      throw err;
+      return { generatedAt: new Date().toISOString(), events };
+    } catch (err) {
+      return this.mapError(err, 'audit');
+    }
+  }
+
+  /** GET /derbies/:slug/disputes */
+  @Get(':slug/disputes')
+  @UseGuards(OrgAuthGuard, RequirePermission('derby:dispute'))
+  async listDisputes(@Req() req: AuthedRequest, @Param('slug') slug: string) {
+    try {
+      const disputes = await this.derbies.listDisputes(
+        slug,
+        req.orgContext!.orgId,
+      );
+      if (!disputes) {
+        throw new NotFoundException({
+          type: 'https://troll.app/problems/derby-not-found',
+          title: 'Derby not found',
+          detail: `No derby for slug "${slug}"`,
+        });
+      }
+      return { generatedAt: new Date().toISOString(), disputes };
+    } catch (err) {
+      return this.mapError(err, 'disputes');
     }
   }
 
@@ -147,26 +159,105 @@ export class DerbiesController {
       );
       return { generatedAt: new Date().toISOString(), weighIn };
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'weigh-in failed';
-      if (message.includes('not found')) {
-        throw new NotFoundException({
-          type: 'https://troll.app/problems/derby-weighin',
-          title: 'Weigh-in rejected',
-          detail: message,
-        });
-      }
-      if (message.includes('not in this org')) {
-        throw new ForbiddenException({
-          type: 'https://troll.app/problems/forbidden',
-          title: 'Forbidden',
-          detail: message,
-        });
-      }
-      throw new BadRequestException({
-        type: 'https://troll.app/problems/derby-weighin',
-        title: 'Weigh-in rejected',
+      return this.mapError(err, 'weighin');
+    }
+  }
+
+  /** POST /derbies/:slug/weighins/:weighInId/void */
+  @Post(':slug/weighins/:weighInId/void')
+  @UseGuards(OrgAuthGuard, RequirePermission('derby:weighin'))
+  async voidWeighIn(
+    @Req() req: AuthedRequest,
+    @Param('slug') slug: string,
+    @Param('weighInId') weighInId: string,
+    @Body() body: VoidWeighInDto,
+  ) {
+    try {
+      const weighIn = await this.derbies.voidWeighIn(
+        slug,
+        req.orgContext!.orgId,
+        req.orgContext!.userId,
+        weighInId,
+        body,
+      );
+      return { generatedAt: new Date().toISOString(), weighIn };
+    } catch (err) {
+      return this.mapError(err, 'void');
+    }
+  }
+
+  /** POST /derbies/:slug/disputes — open a prize dispute. */
+  @Post(':slug/disputes')
+  @UseGuards(OrgAuthGuard, RequirePermission('derby:dispute'))
+  async openDispute(
+    @Req() req: AuthedRequest,
+    @Param('slug') slug: string,
+    @Body() body: OpenDisputeDto,
+  ) {
+    try {
+      const dispute = await this.derbies.openDispute(
+        slug,
+        req.orgContext!.orgId,
+        req.orgContext!.userId,
+        body,
+      );
+      return { generatedAt: new Date().toISOString(), dispute };
+    } catch (err) {
+      return this.mapError(err, 'dispute-open');
+    }
+  }
+
+  /** POST /derbies/:slug/disputes/:disputeId/resolve — captain/owner only. */
+  @Post(':slug/disputes/:disputeId/resolve')
+  @UseGuards(OrgAuthGuard, RequirePermission('derby:dispute'))
+  async resolveDispute(
+    @Req() req: AuthedRequest,
+    @Param('slug') slug: string,
+    @Param('disputeId') disputeId: string,
+    @Body() body: ResolveDisputeDto,
+  ) {
+    try {
+      const dispute = await this.derbies.resolveDispute(
+        slug,
+        req.orgContext!.orgId,
+        req.orgContext!.userId,
+        req.orgContext!.role,
+        disputeId,
+        body,
+      );
+      return { generatedAt: new Date().toISOString(), dispute };
+    } catch (err) {
+      return this.mapError(err, 'dispute-resolve');
+    }
+  }
+
+  private mapError(err: unknown, kind: string): never {
+    const message = err instanceof Error ? err.message : `${kind} failed`;
+    if (message.includes('not in this org')) {
+      throw new ForbiddenException({
+        type: 'https://troll.app/problems/forbidden',
+        title: 'Forbidden',
         detail: message,
       });
     }
+    if (message.includes('cannot resolve')) {
+      throw new ForbiddenException({
+        type: 'https://troll.app/problems/forbidden',
+        title: 'Forbidden',
+        detail: message,
+      });
+    }
+    if (message.includes('not found')) {
+      throw new NotFoundException({
+        type: `https://troll.app/problems/derby-${kind}`,
+        title: 'Not found',
+        detail: message,
+      });
+    }
+    throw new BadRequestException({
+      type: `https://troll.app/problems/derby-${kind}`,
+      title: 'Request rejected',
+      detail: message,
+    });
   }
 }

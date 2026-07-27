@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   ROLES,
   canManageBilling,
+  canResolveDerbyDispute,
   permissionsFor,
   roleAllows,
 } from './roles.js';
@@ -30,5 +31,13 @@ describe('charter roles', () => {
     expect(roleAllows('CAPTAIN', 'derby:weighin')).toBe(true);
     expect(roleAllows('OWNER', 'derby:weighin')).toBe(true);
     expect(roleAllows('VIEWER', 'derby:weighin')).toBe(false);
+  });
+
+  it('lets crew open disputes; only captains/owners resolve', () => {
+    expect(roleAllows('CREW', 'derby:dispute')).toBe(true);
+    expect(roleAllows('VIEWER', 'derby:dispute')).toBe(false);
+    expect(canResolveDerbyDispute('CREW')).toBe(false);
+    expect(canResolveDerbyDispute('CAPTAIN')).toBe(true);
+    expect(canResolveDerbyDispute('OWNER')).toBe(true);
   });
 });

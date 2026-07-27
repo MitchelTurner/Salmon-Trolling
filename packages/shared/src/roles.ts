@@ -21,7 +21,9 @@ export type Permission =
   | 'trip:read'
   | 'catch:write'
   /** Dock weigh-in station for derbies (08-charter-derby.md). */
-  | 'derby:weighin';
+  | 'derby:weighin'
+  /** Open/resolve prize disputes — audit trail is the product. */
+  | 'derby:dispute';
 
 const ALL: readonly Permission[] = [
   'billing:manage',
@@ -34,6 +36,7 @@ const ALL: readonly Permission[] = [
   'trip:read',
   'catch:write',
   'derby:weighin',
+  'derby:dispute',
 ];
 
 const PERMISSIONS_BY_ROLE: Record<Role, readonly Permission[]> = {
@@ -47,6 +50,7 @@ const PERMISSIONS_BY_ROLE: Record<Role, readonly Permission[]> = {
     'trip:read',
     'catch:write',
     'derby:weighin',
+    'derby:dispute',
   ],
   CREW: [
     'boat:read',
@@ -55,6 +59,8 @@ const PERMISSIONS_BY_ROLE: Record<Role, readonly Permission[]> = {
     'trip:read',
     'catch:write',
     'derby:weighin',
+    // CREW may open a dispute from the dock; resolve stays captain/owner.
+    'derby:dispute',
   ],
   VIEWER: ['boat:read', 'crew:read', 'trip:read'],
 };
@@ -70,4 +76,9 @@ export function roleAllows(role: Role, permission: Permission): boolean {
 /** CREW/VIEWER must never reach billing — deckhand on boat device. */
 export function canManageBilling(role: Role): boolean {
   return roleAllows(role, 'billing:manage');
+}
+
+/** Only captains/owners close prize disputes; CREW may open from the dock. */
+export function canResolveDerbyDispute(role: Role): boolean {
+  return role === 'OWNER' || role === 'CAPTAIN';
 }
